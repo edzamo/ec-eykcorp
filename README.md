@@ -846,6 +846,23 @@ Ambos son microservicios del dominio `cliente`; el subdominio indica qué hace c
 
 ---
 
+### 13.2 Estrategia de ramas y commits
+
+`main` es la rama estable: no se trabaja directo en ella. Cada entrega nace en una rama con prefijo, se prueba y se fusiona con `--no-ff` para que el historial muestre de dónde salió cada cambio.
+
+| Prefijo | Uso | Ejemplos |
+|---|---|---|
+| `feature/` | Funcionalidad nueva | `feature/hexagonal-dominio`, `feature/persistencia-postgres`, `feature/seguridad-jwt`, `feature/frontend-vue-crud-login` |
+| `fix/` | Corrección de errores | `fix/frontend-telefono-accesibilidad` |
+| `refactor/` | Cambio interno sin alterar comportamiento | `refactor/lombok-infraestructura` |
+| `docs/` | Documentación | `docs/readme-microservicios` |
+
+- **Flujo:** rama → commits → *push* de la rama → `merge --no-ff` a `main` (`Merge <rama> into main: <descripción>`). Las ramas se conservan para poder ver cada entrega.
+- **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) en español, uno por funcionalidad terminada y con sus pruebas incluidas (`feat(dominio)`, `feat(servicio)`, `feat(persistencia)`, `feat(web)`, `fix(frontend)`...).
+- **Nota sobre el historial:** las primeras entregas (hasta `feature/fundacion-monorepo`) se hicieron sobre una rama de trabajo y entraron a `main` sin fusión explícita; las ramas `feature/*` de la etapa siguiente se crearon al final de cada entrega sobre sus commits reales. Desde ahí, cada cambio nace en su propia rama.
+
+---
+
 ## 14. Cómo ejecutar
 
 Cada microservicio tiene su propio README con requisitos, variables de entorno, arquitectura y pruebas:
