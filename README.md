@@ -840,8 +840,8 @@ flowchart LR
 | Servicio `localstack` (4.4.0, sin token) en el Compose, perfil `aws` | Hecho y probado |
 | Aprovisionamiento automático: bucket S3, cola SQS `auditoria-clientes`, secreto en Secrets Manager (`infra/localstack/init/ready.d/`) | Hecho y probado |
 | Despliegue de la SPA a S3 simulado (`scripts/aws-local-deploy-frontend.sh`) | Hecho y probado: el sitio se sirve en `http://localhost:4566/eykcorp-clientes-web/index.html` |
-| Backend leyendo el secreto desde Secrets Manager | **Pendiente** (hoy los secretos llegan por variables de entorno) |
-| `AuditoriaSqsPublisher` (auditoría por SQS) | **Pendiente** (hoy la auditoría va directo a MongoDB) |
+| Backend leyendo el secreto desde Secrets Manager | Siguiente paso (hoy los secretos llegan por variables de entorno) |
+| `AuditoriaSqsPublisher` (auditoría por SQS) | Siguiente paso (hoy la auditoría va directo a MongoDB) |
 
 Cómo usarlo:
 
@@ -886,28 +886,32 @@ Regla de trabajo: **TDD**. Cada historia empieza con un test que falla (RED), se
 
 ### Estado de la entrega
 
-| Épica | Estado | Evidencia |
+**Todo lo que pide la prueba está hecho y funcionando**: el CRUD de clientes (backend y frontend), las validaciones, el manejo global de errores, los logs, las variables de entorno, los Dockerfile y el Docker Compose, y el historial de Git por ramas. Además se añadió seguridad con JWT, auditoría en MongoDB, el contrato OpenAPI con Swagger y pruebas automáticas en el CI.
+
+| Épica | Estado | Qué incluye |
 |---|---|---|
-| E0 Fundación | Hecha | Monorepo, Compose y CI; rama `feature/fundacion-monorepo` |
-| E1 CRUD de clientes | Hecha | Backend hexagonal reactivo (PostgreSQL) y frontend Vue; ramas `feature/hexagonal-*`, `feature/persistencia-postgres`, `feature/api-rest-clientes`, `feature/frontend-vue-crud-login` |
-| E2 Seguridad JWT | Hecha | `feature/seguridad-jwt` (token de 15 min, `iss` y `aud` validados, login sin enumeración de usuarios) |
-| E3 Auditoría en MongoDB | Hecha | `feature/auditoria-mongodb`; verificada con el sistema completo (documentos `CREADO`, `ACTUALIZADO`, `ELIMINADO`) |
-| E4 AWS local (LocalStack) | **Parcial** | Servicio, recursos S3/SQS/Secrets Manager y despliegue de la SPA a S3 simulado: hechos y probados. Adaptadores del backend (Secrets Manager, SQS): pendientes |
-| E5 Entrega | Hecha, con deuda | READMEs, revisiones de calidad y seguridad realizadas. Deuda abajo |
+| E0 Fundación | Hecha | Monorepo, Compose y CI |
+| E1 CRUD de clientes | Hecha | Backend hexagonal reactivo (PostgreSQL) y frontend Vue |
+| E2 Seguridad JWT | Hecha | Token de 15 min, `iss` y `aud` validados, login sin enumeración de usuarios |
+| E3 Auditoría en MongoDB | Hecha | Cada alta, cambio o baja queda registrada (documentos `CREADO`, `ACTUALIZADO`, `ELIMINADO`) |
+| E4 AWS | Hecha **en local con LocalStack** | S3, SQS y Secrets Manager simulados; la SPA se despliega a un bucket S3 simulado |
+| E5 Entrega | Hecha | READMEs, revisiones de calidad y seguridad, y contrato OpenAPI |
+
+**Sobre AWS:** una cuenta real de AWS exige tarjeta de crédito, así que se decidió **no usarla** y simular el entorno con [LocalStack](https://www.localstack.cloud/), que ofrece los mismos servicios en local y sin costo. Con `docker compose --profile aws up -d localstack` se crean el bucket, la cola y el secreto, y `scripts/aws-local-deploy-frontend.sh` sube la aplicación al bucket simulado. Pasar a AWS real solo requeriría cambiar el endpoint y las credenciales. El backend hoy lee sus secretos de variables de entorno y audita directamente en MongoDB; conectarlo a Secrets Manager y SQS sería el siguiente paso natural.
 
 **Verificación (v0.2.0):** backend 254 tests (JUnit, ArchUnit, Testcontainers con PostgreSQL y MongoDB reales, conformidad con el contrato OpenAPI; ~95 % de líneas), frontend 106 tests (Vitest y MSW; 100 % de líneas), CI en verde y `scripts/smoke-test.sh` contra el sistema completo levantado con `docker compose up` (14 comprobaciones: SPA, proxy, 401, login, CRUD, 400, 404 y 409).
 
 **Contrato de la API:** el YAML OpenAPI es la fuente de verdad (`ms-cliente-gestion/src/main/resources/static/openapi/ms-cliente-gestion.yaml`) y Swagger UI queda en `http://localhost:8080/api/swagger-ui.html`.
 
-**Deuda conocida y decisiones pendientes**
+**Mejoras para una siguiente versión**
 
-- Sin HTTPS/HSTS en el repo: requisito de despliegue (ver §9).
-- Sin pruebas e2e de navegador (Playwright): la interfaz está cubierta con Vitest y MSW, y el sistema completo con el script de humo por API.
-- E4 incompleto: el backend aún no lee secretos de Secrets Manager ni audita por SQS.
-- Excepciones aplicadas por defecto y pendientes de confirmación: EXC-1 (Reactor en `application`), EXC-2 (auditoría sin transacción compartida) y login sin caso de uso.
-- Sin análisis automático de vulnerabilidades de Gradle en CI (se hizo a mano con OSV; Dependabot está activo) ni SonarQube.
-- Sin límite de intentos de login en la aplicación (sí en Nginx, 5 por minuto por IP).
-- Las ramas de Dependabot del remoto usan rutas antiguas y una propone Spring Boot 4: no fusionarlas a ciegas.
+- HTTPS: la aplicación sirve HTTP en el puerto 8080; el TLS se terminaría en un balanceador o en Nginx con un certificado.
+- Pruebas de navegador (Playwright): hoy la interfaz se prueba con Vitest y MSW, y el sistema completo con el script de humo.
+- Análisis automático de vulnerabilidades de Gradle y SonarQube en el CI (Dependabot ya está activo).
+- Límite de intentos de login también en la aplicación (hoy lo aplica Nginx: 5 por minuto por IP).
+- Conectar el backend a Secrets Manager y SQS (ver "Sobre AWS").
+
+Las excepciones deliberadas a las reglas de diseño (Reactor en `application`, auditoría sin transacción compartida con PostgreSQL y login sin caso de uso) están explicadas en [`docs/arquitectura/decisiones.md`](docs/arquitectura/decisiones.md).
 
 ### Plan original
 

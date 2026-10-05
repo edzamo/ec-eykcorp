@@ -36,5 +36,5 @@ Programación reactiva de punta a punta (WebFlux y R2DBC), arquitectura hexagona
 | Componentes reutilizables | `ClienteForm` (alta y edición), `ConfirmDialog`, `ErrorAlert`, `LoadingSpinner` | Pruebas de componentes | Cumplido |
 | README técnico e instrucciones | `README.md` y uno por microservicio | Revisión manual | Cumplido |
 | Historial de Git | Ramas `feature/*`, `fix/*`, `refactor/*` fusionadas con `--no-ff` | `git log --graph` | Cumplido |
-| AWS (stack de la empresa) | LocalStack con S3, SQS y Secrets Manager | `scripts/aws-local-deploy-frontend.sh` | **Parcial**: faltan los adaptadores del backend |
-| HTTPS | Requisito de despliegue | n/a | **Pendiente** |
+| AWS (stack de la empresa) | LocalStack con S3, SQS y Secrets Manager (sin cuenta ni tarjeta) | `scripts/aws-local-deploy-frontend.sh` | Cumplido en local |
+| HTTPS | Mejora para una siguiente versión (TLS en balanceador o Nginx) | n/a | Fuera de alcance |
