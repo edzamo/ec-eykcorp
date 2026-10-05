@@ -14,12 +14,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ms-cliente-crud:
+  ms-cliente-gestion:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: ms-cliente-crud
+        working-directory: ms-cliente-gestion
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
@@ -31,21 +31,21 @@ jobs:
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
       - run: ./gradlew check --console=plain
 
-  web-cliente-crud:
+  ms-cliente-presentacion:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     defaults:
       run:
-        working-directory: web-cliente-crud
+        working-directory: ms-cliente-presentacion
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
-          node-version-file: web-cliente-crud/.nvmrc
+          node-version-file: ms-cliente-presentacion/.nvmrc
           cache: npm
-          cache-dependency-path: web-cliente-crud/package-lock.json
+          cache-dependency-path: ms-cliente-presentacion/package-lock.json
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
       - run: npm test

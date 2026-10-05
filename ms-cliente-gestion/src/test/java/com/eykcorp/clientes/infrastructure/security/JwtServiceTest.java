@@ -19,7 +19,7 @@ import reactor.test.StepVerifier;
 class JwtServiceTest {
 
     private static final Instant AHORA = TokensDePrueba.AHORA;
-    private static final String EMISOR = "ms-cliente-crud";
+    private static final String EMISOR = "ms-cliente-gestion";
 
     private final JwtService servicio = TokensDePrueba.servicio(TokensDePrueba.SECRETO, EMISOR, AHORA);
 

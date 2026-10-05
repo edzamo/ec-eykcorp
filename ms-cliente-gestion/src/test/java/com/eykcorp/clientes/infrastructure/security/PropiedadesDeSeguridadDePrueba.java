@@ -15,7 +15,7 @@ import org.springframework.test.context.TestPropertySource;
 @TestPropertySource(properties = {
         "app.security.jwt.secret=" + TokensDePrueba.SECRETO,
         "app.security.jwt.expiration-minutes=30",
-        "app.security.jwt.issuer=ms-cliente-crud",
+        "app.security.jwt.issuer=ms-cliente-gestion",
         "app.security.admin.user=" + TokensDePrueba.USUARIO,
         "app.security.admin.password-hash=" + TokensDePrueba.HASH
 })
