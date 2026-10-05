@@ -1,4 +1,7 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.mapper;
+
+import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.request.ClienteRequest;
+import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.response.ClienteResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

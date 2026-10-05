@@ -1,4 +1,4 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.exception;
 
 import static org.assertj.core.api.Assertions.assertThat;
 

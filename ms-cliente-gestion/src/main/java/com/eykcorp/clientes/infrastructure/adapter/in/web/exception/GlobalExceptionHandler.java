@@ -1,4 +1,4 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.exception;
 
 import com.eykcorp.clientes.domain.cliente.ClienteNoEncontradoException;
 import com.eykcorp.clientes.domain.cliente.CorreoDuplicadoException;

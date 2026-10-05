@@ -1,4 +1,8 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.controller;
+
+import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.request.ClienteRequest;
+import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.response.ClienteResponse;
+import com.eykcorp.clientes.infrastructure.adapter.in.web.mapper.ClienteWebMapper;
 
 import com.eykcorp.clientes.application.port.in.ActualizarClienteUseCase;
 import com.eykcorp.clientes.application.port.in.CrearClienteUseCase;
