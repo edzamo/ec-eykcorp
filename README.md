@@ -752,6 +752,24 @@ flowchart LR
 | **SQS** | La auditoría se publica en una cola y un consumidor la guarda en MongoDB, desacoplando la escritura | `AuditoriaSqsPublisher` (implementa `AuditoriaPort`) |
 | **S3** | Variante de despliegue del frontend: `aws s3 sync dist/` a un bucket con hosting estático | Script de despliegue, no es código de la app |
 
+**Estado actual (verificado)**
+
+| Pieza | Estado |
+|---|---|
+| Servicio `localstack` (4.4.0, sin token) en el Compose, perfil `aws` | Hecho y probado |
+| Aprovisionamiento automático: bucket S3, cola SQS `auditoria-clientes`, secreto en Secrets Manager (`infra/localstack/init/ready.d/`) | Hecho y probado |
+| Despliegue de la SPA a S3 simulado (`scripts/aws-local-deploy-frontend.sh`) | Hecho y probado: el sitio se sirve en `http://localhost:4566/eykcorp-clientes-web/index.html` |
+| Backend leyendo el secreto desde Secrets Manager | **Pendiente** (hoy los secretos llegan por variables de entorno) |
+| `AuditoriaSqsPublisher` (auditoría por SQS) | **Pendiente** (hoy la auditoría va directo a MongoDB) |
+
+Cómo usarlo:
+
+```bash
+docker compose --profile aws up -d localstack      # arranca el AWS simulado y crea los recursos
+./scripts/aws-local-deploy-frontend.sh             # compila la SPA y la sube al bucket S3 simulado
+docker compose --profile aws down                  # lo apaga
+```
+
 - **El dominio no cambia:** AWS entra solo como adaptadores de salida. En producción real basta con quitar `AWS_ENDPOINT_URL`.
 - **Perfil `aws` de Spring:** activa los adaptadores de AWS. Sin él, la auditoría escribe directo a MongoDB y los secretos vienen del `.env`.
 - **Aprovisionamiento:** scripts Bash con `awslocal` en `localstack/init/ready.d/`, que crean el secreto, la cola y el bucket al iniciar el contenedor.
