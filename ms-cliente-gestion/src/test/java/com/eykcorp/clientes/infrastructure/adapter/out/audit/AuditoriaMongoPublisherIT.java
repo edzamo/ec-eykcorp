@@ -13,7 +13,6 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
@@ -60,8 +59,7 @@ class AuditoriaMongoPublisherIT extends AuditoriaPortContract {
     }
 
     @Override
-    @BeforeEach
-    protected void limpiar() {
+    protected void vaciar() {
         mongo.remove(new org.springframework.data.mongodb.core.query.Query(), "auditoria").block();
     }
 

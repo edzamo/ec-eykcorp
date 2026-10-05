@@ -65,7 +65,7 @@ public class SecurityConfig {
         return new ProblemaSeguridadHandler(objectMapper);
     }
 
-    /** Valida firma HS256, {@code exp} (obligatorio) e {@code iss}. */
+    /** Valida firma HS256, {@code exp} (obligatorio), {@code iss} y {@code aud}. */
     @Bean
     public ReactiveJwtDecoder jwtDecoder(JwtProperties propiedades, Clock reloj) {
         NimbusReactiveJwtDecoder decodificador = NimbusReactiveJwtDecoder
@@ -75,7 +75,7 @@ public class SecurityConfig {
         JwtTimestampValidator vigencia = new JwtTimestampValidator(Duration.ZERO);
         vigencia.setClock(reloj);
         decodificador.setJwtValidator(new DelegatingOAuth2TokenValidator<>(
-                expiracionObligatoria(), vigencia, new JwtIssuerValidator(propiedades.issuer())));
+                expiracionObligatoria(), vigencia, new JwtIssuerValidator(propiedades.issuer()), audienciaEsperada()));
         return decodificador;
     }
 
@@ -83,6 +83,12 @@ public class SecurityConfig {
         return jwt -> jwt.getExpiresAt() == null
                 ? OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "El token no tiene exp", null))
                 : OAuth2TokenValidatorResult.success();
+    }
+
+    private static OAuth2TokenValidator<Jwt> audienciaEsperada() {
+        return jwt -> jwt.getAudience() != null && jwt.getAudience().contains(JwtProperties.AUDIENCIA)
+                ? OAuth2TokenValidatorResult.success()
+                : OAuth2TokenValidatorResult.failure(new OAuth2Error("invalid_token", "Audiencia no válida", null));
     }
 
     @Bean

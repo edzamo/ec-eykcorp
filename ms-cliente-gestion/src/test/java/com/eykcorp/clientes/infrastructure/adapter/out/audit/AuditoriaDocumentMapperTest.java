@@ -28,7 +28,7 @@ class AuditoriaDocumentMapperTest {
         assertThat(documento.id()).isNull();
         assertThat(documento.clienteId()).isEqualTo(7L);
         assertThat(documento.timestamp()).isEqualTo(AHORA);
-        assertThat(mapper.aAccion(documento)).isEqualTo(accion);
+        assertThat(documento.accion()).isEqualTo(accion.name());
     }
 
     @Test

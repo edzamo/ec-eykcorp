@@ -6,6 +6,7 @@ import com.eykcorp.clientes.domain.cliente.ValorInvalidoException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -22,6 +23,8 @@ import org.springframework.web.server.ResponseStatusException;
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
+
+    private static final String RESTRICCION_CORREO = "uk_clientes_correo";
 
     @ExceptionHandler(WebExchangeBindException.class)
     ProblemDetail validacion(WebExchangeBindException error) {
@@ -59,7 +62,21 @@ public class GlobalExceptionHandler {
     ProblemDetail estadoHttp(ResponseStatusException error) {
         HttpStatusCode status = error.getStatusCode();
         String detalle = status.is4xxClientError() ? "Petición incorrecta" : "Error del servidor";
-        return problema(status, HttpStatus.valueOf(status.value()).getReasonPhrase(), detalle);
+        HttpStatus estandar = HttpStatus.resolve(status.value());
+        String titulo = estandar != null ? estandar.getReasonPhrase() : detalle;
+        return problema(status, titulo, detalle);
+    }
+
+    /**
+     * Carrera entre dos altas con el mismo correo (el INSERT choca con la restricción UNIQUE): 409 sin
+     * detalles de la base de datos. Cualquier otra violación de integridad es un 500 genérico.
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    ProblemDetail integridad(DataIntegrityViolationException error) {
+        if (String.valueOf(error.getMessage()).contains(RESTRICCION_CORREO)) {
+            return duplicado(new CorreoDuplicadoException());
+        }
+        return inesperado(error);
     }
 
     @ExceptionHandler(Exception.class)

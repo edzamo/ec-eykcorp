@@ -22,8 +22,14 @@ public abstract class AuditoriaPortContract {
     /** Registros observables del cliente indicado, en orden de inserción. */
     protected abstract List<Registro> registrosDe(Long clienteId);
 
+    /** Único {@code @BeforeEach} (final): un override sin anotación de lifecycle no se ejecutaría. */
     @BeforeEach
-    protected void limpiar() {
+    final void aislar() {
+        vaciar();
+    }
+
+    /** Deja el almacén vacío antes de cada prueba (por defecto nada: el fake es nuevo por test). */
+    protected void vaciar() {
     }
 
     private static Cliente cliente(long id) {

@@ -20,6 +20,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /** E2E del backend: servidor real + PostgreSQL y MongoDB (Testcontainers), con seguridad JWT real (login + Bearer). */
 @PropiedadesDeSeguridadDePrueba
@@ -139,6 +142,23 @@ class ClienteE2ETest {
         web.put().uri("/clientes/{id}", otroId).contentType(MediaType.APPLICATION_JSON)
                 .bodyValue(cuerpo(correo, "Otra"))
                 .exchange().expectStatus().isEqualTo(409);
+    }
+
+    @Test
+    void creaciones_concurrentes_con_el_mismo_correo_deben_dar_un_201_y_el_resto_409_nunca_500() {
+        String correo = correoUnico();
+        int peticiones = 10;
+
+        List<Integer> estados = Flux.range(0, peticiones)
+                .flatMap(i -> Mono.fromCallable(() -> web.post().uri("/clientes")
+                                .contentType(MediaType.APPLICATION_JSON).bodyValue(cuerpo(correo, "Ana"))
+                                .exchange().returnResult(Void.class).getStatus().value())
+                        .subscribeOn(Schedulers.boundedElastic()), peticiones)
+                .collectList().block();
+
+        assertThat(estados).hasSize(peticiones);
+        assertThat(estados).filteredOn(e -> e == 201).hasSize(1);
+        assertThat(estados).filteredOn(e -> e == 409).hasSize(peticiones - 1);
     }
 
     @Test

@@ -19,9 +19,14 @@ public abstract class ClienteRepositoryPortContract {
 
     protected abstract ClienteRepositoryPort repositorio();
 
-    /** Deja el almacén vacío antes de cada prueba (por defecto no hace nada: el fake es nuevo por test). */
+    /** Único {@code @BeforeEach} (final): un override sin anotación de lifecycle no se ejecutaría. */
     @BeforeEach
-    protected void limpiar() {
+    final void aislar() {
+        vaciar();
+    }
+
+    /** Deja el almacén vacío antes de cada prueba (por defecto nada: el fake es nuevo por test). */
+    protected void vaciar() {
     }
 
     protected Cliente nuevo(String correo) {

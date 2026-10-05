@@ -11,6 +11,9 @@ public record JwtProperties(String secret, long expirationMinutes, String issuer
 
     static final int LONGITUD_MINIMA_SECRETO = 32;
 
+    /** Audiencia (aud) de los tokens: el consumidor previsto es la presentación. */
+    public static final String AUDIENCIA = "ms-cliente-presentacion";
+
     public JwtProperties {
         if (secret == null || secret.isBlank() || secret.length() < LONGITUD_MINIMA_SECRETO) {
             throw new IllegalArgumentException(

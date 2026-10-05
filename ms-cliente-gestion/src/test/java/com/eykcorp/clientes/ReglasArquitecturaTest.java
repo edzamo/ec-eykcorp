@@ -86,14 +86,14 @@ class ReglasArquitecturaTest {
     }
 
     @Test
-    void debe_permitir_aplicacion_con_mono_zip_y_transactional() {
+    void debe_permitir_aplicacion_con_mono_zip() {
         String base = FIXTURE + ".permitido";
         debePermitir(
                 ReglasArquitectura.laAplicacionSoloDependeDeDominioYAbstracciones(base), importar(base));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"tx", "slf4j", "validation", "data", "lombok"})
+    @ValueSource(strings = {"tx", "transactional", "slf4j", "validation", "data", "lombok"})
     void debe_detectar_aplicacion_que_depende_de_infraestructura_prohibida(String escenario) {
         String base = FIXTURE + ".violacion." + escenario;
         debeDetectar(

@@ -13,7 +13,7 @@ import java.time.Instant;
 import java.util.Date;
 import lombok.RequiredArgsConstructor;
 
-/** Emite JWT HS256 (sub, iss, iat, exp) usando el {@link Clock} inyectado. */
+/** Emite JWT HS256 (sub, iss, aud, iat, exp) usando el {@link Clock} inyectado. */
 @RequiredArgsConstructor
 public class JwtService {
 
@@ -26,6 +26,7 @@ public class JwtService {
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
                 .subject(usuario)
                 .issuer(propiedades.issuer())
+                .audience(JwtProperties.AUDIENCIA)
                 .issueTime(Date.from(ahora))
                 .expirationTime(Date.from(ahora.plus(vigencia)))
                 .build();
