@@ -2,7 +2,7 @@
 
 Prueba de concepto de un **CRUD de clientes** con backend reactivo en arquitectura hexagonal, frontend SPA en Vue 3 y despliegue dockerizado.
 
-> Estado: **fase de diseño**. Este documento es la fuente de verdad de requerimientos y arquitectura. El código se construye después, historia por historia (ver [Plan de entrega](#12-plan-de-entrega-épicas-e-historias)).
+> Estado: **v0.1.0, implementado y verificado** (ver [Estado de la entrega](#estado-de-la-entrega)). Este documento recoge los requerimientos, la arquitectura y las decisiones; cada microservicio tiene además su propio README.
 
 ## Índice
 
@@ -114,7 +114,7 @@ Decisiones propias que van más allá del enunciado original:
 | Servidor web | Nginx | Sirve el frontend y hace reverse proxy a la API |
 | Contenedores | Docker, Docker Compose | Entorno reproducible |
 | Pruebas backend | JUnit 5, Mockito, Reactor `StepVerifier`, `WebTestClient`, Testcontainers, ArchUnit | |
-| Pruebas frontend | Vitest, Vue Test Utils, MSW, Playwright | |
+| Pruebas frontend | Vitest, Vue Test Utils, MSW; ESLint y Prettier | |
 | CI/CD | GitHub Actions | |
 | Auditoría | MongoDB (Spring Data Reactive MongoDB), en contenedor Docker | Registro de cambios sobre clientes (Épica 3) |
 | AWS local | LocalStack 4.4.0 + AWS SDK v2 (Secrets Manager, SQS, S3) | Simula AWS sin cuenta real (Épica 4) |
@@ -532,7 +532,6 @@ ms-cliente-presentacion/
 │   └── App.vue
 ├── tests/
 │   ├── unit/           Vitest
-│   └── e2e/            Playwright
 ├── nginx.conf
 ├── Dockerfile
 └── README.md
@@ -663,7 +662,7 @@ sequenceDiagram
 - **Usuario:** un único administrador definido por variables de entorno, con contraseña en BCrypt. Sin tabla de usuarios por ahora.
 - **Autorización:** todos los endpoints `/clientes/**` requieren token válido.
 - **CORS:** en producción no hace falta, porque Nginx sirve el frontend y la API bajo el mismo origen. En desarrollo local se permite el origen de Vite.
-- **HTTPS:** se termina en Nginx (certificado local autofirmado en dev, certificado real en producción).
+- **HTTPS:** requisito de despliegue. Esta versión sirve HTTP en el puerto 8080; el TLS (y la cabecera HSTS) se termina en un balanceador o proxy delante, o se añade a Nginx con un certificado. No está implementado en el repo.
 - **Secretos:** nunca en el repositorio; el repo solo incluye `.env.example`.
 
 ---
@@ -677,7 +676,7 @@ flowchart TB
     subgraph Host
         direction TB
         subgraph NET["Red interna: eyk-net"]
-            NGX["frontend<br/>Nginx :80/:443<br/>(build multi-stage Node → Nginx)"]
+            NGX["frontend<br/>Nginx :8080<br/>(build multi-stage Node → Nginx)"]
             BCK["backend<br/>Spring Boot :8080<br/>(build multi-stage JDK 17 → JRE 17)"]
             PG[("postgres :5432<br/>volumen pgdata")]
             MG[("mongo :27017<br/>volumen mongodata<br/>auditoría")]
@@ -723,7 +722,7 @@ Solo Nginx publica un puerto al host. Backend y bases de datos son accesibles ú
 - Sirve los archivos estáticos de la SPA con `try_files` hacia `index.html` (rutas del router).
 - `location /api/` hace `proxy_pass` hacia `http://ms-cliente-gestion:8080/`.
 - Cabeceras de seguridad básicas y compresión gzip.
-- HTTPS con certificado montado como volumen.
+- HTTPS: no incluido en esta versión (ver sección de seguridad).
 
 ### 10.5 Simulación de AWS en local (LocalStack)
 
@@ -795,7 +794,7 @@ flowchart TB
 | **Slice** | `@WebFluxTest` + `WebTestClient`: controller y `GlobalExceptionHandler` | Vista montada con MSW como API simulada |
 | **Integración** | Testcontainers + PostgreSQL y MongoDB: adaptadores R2DBC y Mongo, migraciones Flyway. Test de **contrato compartido** que corre contra `InMemoryClienteRepository` y contra el adaptador real | — |
 | **Arquitectura** | ArchUnit: el dominio no depende de Spring ni de infraestructura | — |
-| **E2E** | `@SpringBootTest` con puerto real + Testcontainers: CRUD completo, 400, 404, 409, 401 | Playwright contra el stack de Compose: crear, editar, eliminar, error, carga |
+| **E2E** | `@SpringBootTest` con puerto real + Testcontainers: CRUD completo, 400, 404, 409, 401 | Prueba de humo del sistema completo a través de Nginx (`scripts/smoke-test.sh`); sin Playwright en esta versión |
 
 Regla de trabajo: **TDD**. Cada historia empieza con un test que falla (RED), se implementa lo mínimo (GREEN) y se refactoriza. El historial de Git lo refleja con commits separados.
 
@@ -803,7 +802,30 @@ Regla de trabajo: **TDD**. Cada historia empieza con un test que falla (RED), se
 
 ## 12. Plan de entrega: épicas e historias
 
-Las historias detalladas, con criterios de aceptación, se escriben en `docs/historias/` antes de implementar. Este es el esquema.
+### Estado de la entrega
+
+| Épica | Estado | Evidencia |
+|---|---|---|
+| E0 Fundación | Hecha | Monorepo, Compose y CI; rama `feature/fundacion-monorepo` |
+| E1 CRUD de clientes | Hecha | Backend hexagonal reactivo (PostgreSQL) y frontend Vue; ramas `feature/hexagonal-*`, `feature/persistencia-postgres`, `feature/api-rest-clientes`, `feature/frontend-vue-crud-login` |
+| E2 Seguridad JWT | Hecha | `feature/seguridad-jwt` (token de 15 min, `iss` y `aud` validados, login sin enumeración de usuarios) |
+| E3 Auditoría en MongoDB | Hecha | `feature/auditoria-mongodb`; verificada con el sistema completo (documentos `CREADO`, `ACTUALIZADO`, `ELIMINADO`) |
+| E4 AWS local (LocalStack) | **Parcial** | Servicio, recursos S3/SQS/Secrets Manager y despliegue de la SPA a S3 simulado: hechos y probados. Adaptadores del backend (Secrets Manager, SQS): pendientes |
+| E5 Entrega | Hecha, con deuda | READMEs, revisiones de calidad y seguridad realizadas. Deuda abajo |
+
+**Verificación (v0.1.0):** backend 217 tests (JUnit, ArchUnit, Testcontainers con PostgreSQL y MongoDB reales; 95 % de líneas), frontend 106 tests (Vitest y MSW; 100 % de líneas), `scripts/smoke-test.sh` contra el sistema completo levantado con `docker compose up` (14 comprobaciones: SPA, proxy, 401, login, CRUD, 400, 404 y 409).
+
+**Deuda conocida y decisiones pendientes**
+
+- Sin HTTPS/HSTS en el repo: requisito de despliegue (ver §9).
+- Sin pruebas e2e de navegador (Playwright): la interfaz está cubierta con Vitest y MSW, y el sistema completo con el script de humo por API.
+- E4 incompleto: el backend aún no lee secretos de Secrets Manager ni audita por SQS.
+- Excepciones aplicadas por defecto y pendientes de confirmación: EXC-1 (Reactor en `application`), EXC-2 (auditoría sin transacción compartida) y login sin caso de uso.
+- Sin análisis automático de vulnerabilidades de Gradle en CI (se hizo a mano con OSV; Dependabot está activo) ni SonarQube.
+- Sin límite de intentos de login en la aplicación (sí en Nginx, 5 por minuto por IP).
+- Las ramas de Dependabot del remoto usan rutas antiguas y una propone Spring Boot 4: no fusionarlas a ciegas.
+
+### Plan original
 
 | Épica | Historias | Resultado |
 |---|---|---|
@@ -823,8 +845,8 @@ Las historias detalladas, con criterios de aceptación, se escriben en `docs/his
 | Manejo global de excepciones | E1 | `@WebFluxTest` |
 | Logs básicos | E1 | revisión de código |
 | Variables de entorno | E0/E1 | `docker compose config` |
-| Dockerfile / Compose funcional | E0/E1 | job e2e en CI |
-| Estados de carga y error (frontend) | E1 | Vitest + Playwright |
+| Dockerfile / Compose funcional | E0/E1 | job `imagenes-docker` en CI y `scripts/smoke-test.sh` |
+| Estados de carga y error (frontend) | E1 | Vitest + MSW |
 
 ---
 
@@ -901,6 +923,7 @@ docker compose up --build       # postgres + mongo + backend + frontend
 ```bash
 cd ms-cliente-gestion      && ./gradlew check     # unitarias, integración, e2e y ArchUnit (requiere Docker)
 cd ms-cliente-presentacion && npm ci && npm test  # Vitest
+./scripts/smoke-test.sh                            # sistema completo (con docker compose up y ADMIN_USER/ADMIN_PASSWORD)
 ```
 
 ---
