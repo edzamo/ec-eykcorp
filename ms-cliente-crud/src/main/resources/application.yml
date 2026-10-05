@@ -1,6 +1,16 @@
 spring:
   application:
     name: ms-cliente-crud
+  # Sin valores por defecto con credenciales: se inyectan por variables de entorno (.env / compose)
+  r2dbc:
+    url: ${SPRING_R2DBC_URL}
+    username: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
+  flyway:
+    # Flyway usa JDBC solo al arrancar para migrar
+    url: ${SPRING_FLYWAY_URL}
+    user: ${POSTGRES_USER}
+    password: ${POSTGRES_PASSWORD}
 
 server:
   port: ${SERVER_PORT:8080}
