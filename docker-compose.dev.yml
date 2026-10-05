@@ -1,0 +1,10 @@
+# Solo para DESARROLLO LOCAL: publica las bases de datos en loopback (127.0.0.1)
+# para ejecutar el backend fuera de Docker con `./gradlew bootRun`.
+# Uso:  docker compose -f docker-compose.yml -f docker-compose.dev.yml up -d postgres mongo
+services:
+  postgres:
+    ports:
+      - "127.0.0.1:5432:5432"
+  mongo:
+    ports:
+      - "127.0.0.1:27017:27017"

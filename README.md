@@ -848,20 +848,24 @@ Ambos son microservicios del dominio `cliente`; el subdominio indica qué hace c
 
 ## 14. Cómo ejecutar
 
-> Disponible cuando se complete la Épica 1. Los comandos finales se confirmarán al implementarla.
+Cada microservicio tiene su propio README con requisitos, variables de entorno, arquitectura y pruebas:
+
+- [`ms-cliente-gestion`](ms-cliente-gestion/README.md): backend (Spring Boot WebFlux).
+- [`ms-cliente-presentacion`](ms-cliente-presentacion/README.md): frontend (Vue 3 + Nginx).
+
+**Todo el sistema con un comando** (necesita Docker y Docker Compose v2):
 
 ```bash
-cp .env.example .env            # ajustar secretos
-docker compose up --build       # levanta postgres, backend y frontend
-# Aplicación: http://localhost:8080
+cp .env.example .env            # completa los secretos; ver comentarios del archivo
+docker compose up --build       # postgres + mongo + backend + frontend
+# Aplicación: http://localhost:8080   (único puerto publicado)
 ```
 
 **Pruebas**
 
 ```bash
-cd ms-cliente-gestion  && ./gradlew check  # unitarias, integración, e2e y ArchUnit
-cd ms-cliente-presentacion && npm test         # Vitest
-cd ms-cliente-presentacion && npm run e2e      # Playwright (requiere el stack levantado)
+cd ms-cliente-gestion      && ./gradlew check     # unitarias, integración, e2e y ArchUnit (requiere Docker)
+cd ms-cliente-presentacion && npm ci && npm test  # Vitest
 ```
 
 ---
