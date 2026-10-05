@@ -51,20 +51,20 @@ class ReglasArquitecturaTest {
     void debe_detectar_aplicacion_que_depende_de_reactor_util() {
         String base = FIXTURE + ".violacion.aplicacion";
         debeDetectar(
-                ReglasArquitectura.laAplicacionNoDependeDeAdaptadoresNiFrameworks(base), importar(base));
+                ReglasArquitectura.laAplicacionSoloDependeDeDominioYAbstracciones(base), importar(base));
     }
 
     @Test
     void debe_permitir_aplicacion_con_service_y_reactor_core() {
         String base = FIXTURE + ".permitido";
         debePermitir(
-                ReglasArquitectura.laAplicacionNoDependeDeAdaptadoresNiFrameworks(base), importar(base));
+                ReglasArquitectura.laAplicacionSoloDependeDeDominioYAbstracciones(base), importar(base));
     }
 
     @Test
     void debe_ignorar_paquetes_domain_y_application_ajenos_al_base() {
         JavaClasses ajenas = importar(FIXTURE + ".ajeno");
         debePermitir(ReglasArquitectura.elDominioEsJavaPuro(BASE_REAL), ajenas);
-        debePermitir(ReglasArquitectura.laAplicacionNoDependeDeAdaptadoresNiFrameworks(BASE_REAL), ajenas);
+        debePermitir(ReglasArquitectura.laAplicacionSoloDependeDeDominioYAbstracciones(BASE_REAL), ajenas);
     }
 }

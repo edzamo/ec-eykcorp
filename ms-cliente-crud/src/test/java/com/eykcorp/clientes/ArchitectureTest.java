@@ -6,11 +6,13 @@ import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
 /**
- * Reglas de la arquitectura hexagonal (INV-01..03, INV-10, INV-12).
+ * Reglas de la arquitectura hexagonal (INV-01..03, INV-10, INV-12), definidas en
+ * {@link ReglasArquitectura} y verificadas con canarios en {@link ReglasArquitecturaTest}.
  *
  * <p>En E0 los paquetes están vacíos, por lo que estas reglas son vacuosas
- * ({@code allowEmptyShould}) hasta que E1 introduzca clases. Excepción
- * EXC-1: {@code reactor.core..} se permite únicamente en {@code application}.
+ * ({@code allowEmptyShould(true)}). Condición de retiro (criterio de aceptación de E1): quitar
+ * {@code allowEmptyShould} de cada regla cuando existan clases en la capa correspondiente.
+ * Excepción EXC-1 (pendiente de confirmación): {@code reactor.core..} solo en {@code application}.
  */
 @AnalyzeClasses(
         packages = "com.eykcorp.clientes",
@@ -24,7 +26,7 @@ class ArchitectureTest {
 
     @ArchTest
     static final ArchRule la_aplicacion_no_depende_de_adaptadores_ni_frameworks =
-            ReglasArquitectura.laAplicacionNoDependeDeAdaptadoresNiFrameworks(BASE);
+            ReglasArquitectura.laAplicacionSoloDependeDeDominioYAbstracciones(BASE);
 
     @ArchTest
     static final ArchRule los_adaptadores_no_dependen_entre_si =
