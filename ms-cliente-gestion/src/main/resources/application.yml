@@ -47,3 +47,4 @@ management:
 logging:
   level:
     root: ${LOG_LEVEL:INFO}
+    com.eykcorp.clientes: ${APP_LOG_LEVEL:INFO}

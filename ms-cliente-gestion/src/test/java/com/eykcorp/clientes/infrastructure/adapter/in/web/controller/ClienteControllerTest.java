@@ -3,10 +3,12 @@ package com.eykcorp.clientes.infrastructure.adapter.in.web.controller;
 import com.eykcorp.clientes.infrastructure.adapter.in.web.exception.GlobalExceptionHandler;
 import com.eykcorp.clientes.infrastructure.adapter.in.web.mapper.ClienteWebMapper;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
+import com.eykcorp.clientes.CapturaLogs;
 import com.eykcorp.clientes.application.port.in.ActualizarClienteUseCase;
 import com.eykcorp.clientes.application.port.in.CrearClienteUseCase;
 import com.eykcorp.clientes.application.command.DatosCliente;
@@ -227,5 +229,28 @@ class ClienteControllerTest {
                 .expectBody()
                 .jsonPath("$.status").isEqualTo(500)
                 .jsonPath("$.detail").isEqualTo("Error interno del servidor");
+    }
+
+    @Test
+    void cada_endpoint_debe_loguear_debug_con_metodo_ruta_e_id_sin_datos_personales() {
+        when(crear.crear(any(DatosCliente.class))).thenReturn(Mono.just(ANA));
+        when(listar.listar()).thenReturn(Flux.just(ANA));
+        when(obtener.obtener(1L)).thenReturn(Mono.just(ANA));
+        when(actualizar.actualizar(eq(1L), any(DatosCliente.class))).thenReturn(Mono.just(ANA));
+        when(eliminar.eliminar(1L)).thenReturn(Mono.empty());
+
+        try (CapturaLogs logs = CapturaLogs.de(ClienteController.class)) {
+            web.post().uri("/clientes").contentType(MediaType.APPLICATION_JSON).bodyValue(VALIDO)
+                    .exchange().expectStatus().isCreated();
+            web.get().uri("/clientes").exchange().expectStatus().isOk();
+            web.get().uri("/clientes/1").exchange().expectStatus().isOk();
+            web.put().uri("/clientes/1").contentType(MediaType.APPLICATION_JSON).bodyValue(VALIDO)
+                    .exchange().expectStatus().isOk();
+            web.delete().uri("/clientes/1").exchange().expectStatus().isNoContent();
+
+            assertThat(logs.mensajes()).containsExactly(
+                    "DEBUG POST /clientes", "DEBUG GET /clientes", "DEBUG GET /clientes/1",
+                    "DEBUG PUT /clientes/1", "DEBUG DELETE /clientes/1");
+        }
     }
 }

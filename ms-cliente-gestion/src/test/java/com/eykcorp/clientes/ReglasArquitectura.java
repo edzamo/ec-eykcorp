@@ -2,6 +2,7 @@ package com.eykcorp.clientes;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.equivalentTo;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
+import static com.tngtech.archunit.core.domain.properties.HasName.Predicates.name;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -27,7 +28,11 @@ final class ReglasArquitectura {
     /**
      * EXC-1 (aplicada por defecto, pendiente de confirmación del usuario): reactor.core solo en
      * application. Quitar esta constante si se rechaza. EXC-2: sin @Transactional en application
-     * (ningún caso de uso lo usa; la regla lo rechaza). No se abre reactor.util.* completo (solo function, context y retry).
+     * (ningún caso de uso lo usa; la regla lo rechaza). EXC-3 (autorizada por el usuario,
+     * 2026-10-05; limitada a application, el dominio sigue puro): Lombok y SLF4J permitidos en
+     * application contra INV-12 del kit; Lombok se admite solo como {@code lombok.Generated} (el
+     * código generado se marca con {@code lombok.addLombokGeneratedAnnotation = true}) y SLF4J como
+     * {@code org.slf4j..}. No se abre reactor.util.* completo (solo function, context y retry).
      */
     private static final String REACTOR_EXC_1 = "reactor.core..";
 
@@ -53,8 +58,10 @@ final class ReglasArquitectura {
                                 REACTOR_EXC_1,
                                 "reactor.util.function..",
                                 "reactor.util.context..",
-                                "reactor.util.retry..")
-                                .or(equivalentTo(Service.class)));
+                                "reactor.util.retry..",
+                                "org.slf4j..")
+                                .or(equivalentTo(Service.class))
+                                .or(name("lombok.Generated")));
     }
 
     static ArchRule losAdaptadoresNoDependenEntreSi(String base) {

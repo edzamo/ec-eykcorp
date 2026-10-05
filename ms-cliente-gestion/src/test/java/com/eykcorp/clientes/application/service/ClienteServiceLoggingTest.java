@@ -2,9 +2,7 @@ package com.eykcorp.clientes.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
+import com.eykcorp.clientes.CapturaLogs;
 import com.eykcorp.clientes.application.command.DatosCliente;
 import com.eykcorp.clientes.application.port.out.FakeAuditoriaPort;
 import com.eykcorp.clientes.application.port.out.InMemoryClienteRepository;
@@ -12,55 +10,83 @@ import java.time.Clock;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.slf4j.LoggerFactory;
-import org.slf4j.bridge.SLF4JBridgeHandler;
 import reactor.test.StepVerifier;
 
-/** Verifica que System.Logger (usado en application) llega a SLF4J/Logback vía jul-to-slf4j y sin PII. */
+/** Logs de ClienteService (Lombok @Slf4j) verificados con un ListAppender de Logback y sin PII (INV-17). */
 class ClienteServiceLoggingTest {
 
-    private final ListAppender<ILoggingEvent> appender = new ListAppender<>();
-    private final Logger logbackLogger = (Logger) LoggerFactory.getLogger(ClienteService.class.getName());
+    private static final String CORREO = "ana.perez@example.com";
+    private static final DatosCliente ANA = new DatosCliente("Ana", "Pérez", CORREO, "0991234567");
 
-    private final java.util.logging.Logger raizJul = java.util.logging.Logger.getLogger("");
-    private java.util.logging.Handler[] manejadoresOriginales;
+    private CapturaLogs logs;
+    private FakeAuditoriaPort auditoria;
+    private ClienteService service;
 
     @BeforeEach
-    void instalarPuente() {
-        manejadoresOriginales = raizJul.getHandlers();
-        SLF4JBridgeHandler.removeHandlersForRootLogger();
-        SLF4JBridgeHandler.install();
-        appender.start();
-        logbackLogger.addAppender(appender);
+    void preparar() {
+        logs = CapturaLogs.de(ClienteService.class);
+        auditoria = new FakeAuditoriaPort();
+        service = new ClienteService(new InMemoryClienteRepository(), auditoria, Clock.systemUTC());
     }
 
     @AfterEach
-    void desinstalarPuente() {
-        logbackLogger.detachAppender(appender);
-        SLF4JBridgeHandler.uninstall();
-        // Restaura el estado JUL global original (el puente se instala solo durante este test)
-        for (java.util.logging.Handler manejador : raizJul.getHandlers()) {
-            raizJul.removeHandler(manejador);
-        }
-        for (java.util.logging.Handler manejador : manejadoresOriginales) {
-            raizJul.addHandler(manejador);
-        }
+    void cerrar() {
+        logs.close();
+    }
+
+    private void sinPii() {
+        assertThat(String.join("\n", logs.mensajes()))
+                .doesNotContain("ana.perez").doesNotContain("0991234567").doesNotContain("Pérez")
+                .doesNotContain("Ana ");
     }
 
     @Test
     void el_fallo_de_auditoria_llega_a_logback_sin_datos_personales() {
-        FakeAuditoriaPort auditoria = new FakeAuditoriaPort();
         auditoria.fallarCon(new IllegalStateException("mongo caído"));
-        ClienteService service = new ClienteService(new InMemoryClienteRepository(), auditoria, Clock.systemUTC());
 
-        StepVerifier.create(service.crear(
-                        new DatosCliente("Ana", "Pérez", "ana.perez@example.com", "0991234567")))
-                .expectNextCount(1)
-                .verifyComplete();
+        StepVerifier.create(service.crear(ANA)).expectNextCount(1).verifyComplete();
 
-        assertThat(appender.list).hasSize(1);
-        String mensaje = appender.list.get(0).getFormattedMessage();
-        assertThat(mensaje).contains("CREADO").contains("IllegalStateException")
-                .doesNotContain("ana.perez").doesNotContain("0991234567").doesNotContain("Pérez");
+        assertThat(logs.mensajes()).anySatisfy(m -> assertThat(m)
+                .startsWith("WARN").contains("CREADO").contains("IllegalStateException"));
+        sinPii();
+    }
+
+    @Test
+    void crear_debe_registrar_debug_de_entrada_e_info_con_id() {
+        StepVerifier.create(service.crear(ANA)).expectNextCount(1).verifyComplete();
+
+        assertThat(logs.mensajes()).contains("DEBUG Creando cliente", "INFO Cliente creado id=1");
+        sinPii();
+    }
+
+    @Test
+    void crear_con_correo_duplicado_debe_registrar_debug_del_rechazo_sin_el_correo() {
+        StepVerifier.create(service.crear(ANA)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(service.crear(ANA)).expectError().verify();
+
+        assertThat(logs.mensajes()).contains("DEBUG Cliente rechazado: correo duplicado");
+        sinPii();
+    }
+
+    @Test
+    void listar_y_obtener_deben_registrar_debug() {
+        StepVerifier.create(service.crear(ANA)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(service.listar()).expectNextCount(1).verifyComplete();
+        StepVerifier.create(service.obtener(1L)).expectNextCount(1).verifyComplete();
+
+        assertThat(logs.mensajes()).contains("DEBUG Listando clientes", "DEBUG Buscando cliente id=1");
+        sinPii();
+    }
+
+    @Test
+    void actualizar_y_eliminar_deben_registrar_info_con_id() {
+        StepVerifier.create(service.crear(ANA)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(service.actualizar(1L, ANA)).expectNextCount(1).verifyComplete();
+        StepVerifier.create(service.eliminar(1L)).verifyComplete();
+
+        assertThat(logs.mensajes()).contains(
+                "DEBUG Actualizando cliente id=1", "INFO Cliente actualizado id=1",
+                "DEBUG Eliminando cliente id=1", "INFO Cliente eliminado id=1");
+        sinPii();
     }
 }
