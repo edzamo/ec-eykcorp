@@ -2,7 +2,7 @@ name: CI
 
 on:
   push:
-    branches: [main, "epic/**"]
+    branches: [main, "feature/**", "fix/**", "refactor/**", "docs/**", "ci/**"]
   pull_request:
     branches: [main]
 
@@ -29,7 +29,26 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: gradle/actions/setup-gradle@748248ddd2a24f49513d8f472f81c3a07d4d50e1 # v4.4.4
+      - name: Versión de Docker del runner (diagnóstico)
+        run: docker version --format '::notice title=Docker del runner::cliente {{.Client.Version}} (API {{.Client.APIVersion}}), servidor {{.Server.Version}} (API {{.Server.APIVersion}})'
       - run: ./gradlew check --console=plain
+      - name: Resumen de fallos de pruebas
+        if: failure()
+        run: |
+          python3 - <<'PY'
+          import glob, html, re
+          n = 0
+          for f in sorted(glob.glob('build/test-results/test/*.xml')):
+              s = open(f, encoding='utf-8').read()
+              for m in re.finditer(r'<testcase name="([^"]*)" classname="([^"]*)"[^>]*>\s*<(?:failure|error) message="([^"]{0,300})', s):
+                  msg = html.unescape(m.group(3)).replace('\n', ' ')[:250]
+                  print(f"::error title={m.group(2).split('.')[-1]}.{m.group(1)}::{msg}")
+                  n += 1
+                  if n >= 8:
+                      raise SystemExit
+          if n == 0:
+              print('::error title=Sin pruebas fallidas en los XML::el fallo es de Gradle o del entorno (cobertura, arranque, Docker)')
+          PY
 
   ms-cliente-presentacion:
     runs-on: ubuntu-24.04
