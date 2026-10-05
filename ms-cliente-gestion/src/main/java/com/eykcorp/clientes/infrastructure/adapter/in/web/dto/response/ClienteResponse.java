@@ -1,4 +1,4 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.dto.response;
 
 import java.time.Instant;
 

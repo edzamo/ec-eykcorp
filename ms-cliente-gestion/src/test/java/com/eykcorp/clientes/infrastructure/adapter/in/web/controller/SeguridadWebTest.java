@@ -1,4 +1,7 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.controller;
+
+import com.eykcorp.clientes.infrastructure.adapter.in.web.exception.GlobalExceptionHandler;
+import com.eykcorp.clientes.infrastructure.adapter.in.web.mapper.ClienteWebMapper;
 
 import static org.mockito.Mockito.when;
 

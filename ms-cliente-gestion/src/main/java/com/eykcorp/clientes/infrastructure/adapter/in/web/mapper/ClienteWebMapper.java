@@ -1,4 +1,7 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.mapper;
+
+import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.request.ClienteRequest;
+import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.response.ClienteResponse;
 
 import com.eykcorp.clientes.application.port.in.DatosCliente;
 import com.eykcorp.clientes.domain.cliente.Cliente;
@@ -7,12 +10,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class ClienteWebMapper {
 
-    DatosCliente aDatos(ClienteRequest peticion) {
+    public DatosCliente aDatos(ClienteRequest peticion) {
         return new DatosCliente(
                 peticion.nombres(), peticion.apellidos(), peticion.correo(), peticion.telefono());
     }
 
-    ClienteResponse aRespuesta(Cliente cliente) {
+    public ClienteResponse aRespuesta(Cliente cliente) {
         return new ClienteResponse(
                 cliente.id(),
                 cliente.nombres(),
