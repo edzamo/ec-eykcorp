@@ -840,8 +840,8 @@ flowchart LR
 | Servicio `localstack` (4.4.0, sin token) en el Compose, perfil `aws` | Hecho y probado |
 | Aprovisionamiento automático: bucket S3, cola SQS `auditoria-clientes`, secreto en Secrets Manager (`infra/localstack/init/ready.d/`) | Hecho y probado |
 | Despliegue de la SPA a S3 simulado (`scripts/aws-local-deploy-frontend.sh`) | Hecho y probado: el sitio se sirve en `http://localhost:4566/eykcorp-clientes-web/index.html` |
-| Backend leyendo el secreto desde Secrets Manager | **Pendiente** (hoy los secretos llegan por variables de entorno) |
-| `AuditoriaSqsPublisher` (auditoría por SQS) | **Pendiente** (hoy la auditoría va directo a MongoDB) |
+| Backend leyendo el secreto desde Secrets Manager | Siguiente paso (hoy los secretos llegan por variables de entorno) |
+| `AuditoriaSqsPublisher` (auditoría por SQS) | Siguiente paso (hoy la auditoría va directo a MongoDB) |
 
 Cómo usarlo:
 
