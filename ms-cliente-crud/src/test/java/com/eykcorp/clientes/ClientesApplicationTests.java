@@ -19,4 +19,11 @@ class ClientesApplicationTests {
                 .expectBody()
                 .jsonPath("$.status").isEqualTo("UP");
     }
+
+    @Test
+    void debe_responder_404_cuando_se_consulta_actuator_env_porque_no_esta_expuesto() {
+        webTestClient.get().uri("/actuator/env")
+                .exchange()
+                .expectStatus().isNotFound();
+    }
 }
