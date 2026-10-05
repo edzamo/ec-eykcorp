@@ -9,8 +9,7 @@ import com.tngtech.archunit.lang.ArchRule;
  * Reglas de la arquitectura hexagonal (INV-01..03, INV-10, INV-12), definidas en
  * {@link ReglasArquitectura} y verificadas con canarios en {@link ReglasArquitecturaTest}.
  *
- * <p>Las reglas ya no admiten conjuntos vacíos (se retiró {@code allowEmptyShould}); solo la regla de
- * {@code infrastructure.security} lo mantiene hasta que exista esa capa.
+ * <p>Las reglas no admiten conjuntos vacíos (se retiró {@code allowEmptyShould}).
  * Excepción EXC-1 (pendiente de confirmación): {@code reactor.core..} solo en {@code application}.
  */
 @AnalyzeClasses(

@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.support.WebExchangeBindException;
 import org.springframework.web.server.ResponseStatusException;
 
-/** Único punto de traducción de errores a ProblemDetail (RFC 7807). */
+/**
+ * Traducción de errores de los controladores a ProblemDetail (RFC 7807). Los 401/403 de la cadena de
+ * seguridad los traduce {@code ProblemaSeguridadHandler} (segundo punto de transporte, INV-15).
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -46,6 +49,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(CorreoDuplicadoException.class)
     ProblemDetail duplicado(CorreoDuplicadoException error) {
         return problema(HttpStatus.CONFLICT, "Correo duplicado", error.getMessage());
+    }
+
+    @ExceptionHandler(CredencialesInvalidasException.class)
+    ProblemDetail credencialesInvalidas(CredencialesInvalidasException error) {
+        return problema(HttpStatus.UNAUTHORIZED, "No autenticado", error.getMessage());
     }
 
     /** Errores de protocolo (JSON malformado, id no numérico, ruta inexistente...): conservan su status. */

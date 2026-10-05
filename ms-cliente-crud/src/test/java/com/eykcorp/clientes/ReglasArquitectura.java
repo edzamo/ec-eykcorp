@@ -94,9 +94,7 @@ final class ReglasArquitectura {
     static ArchRule laSeguridadNoDependeDeAdaptadores(String base) {
         return noClasses()
                 .that().resideInAPackage(base + ".infrastructure.security..")
-                .should().dependOnClassesThat().resideInAPackage(base + ".infrastructure.adapter..")
-                // infrastructure.security llega en la tarea de seguridad: vacía hasta entonces
-                .allowEmptyShould(true);
+                .should().dependOnClassesThat().resideInAPackage(base + ".infrastructure.adapter..");
     }
 
     /** INV-16: los modelos de persistencia/auditoría no comparten nombre simple con el dominio. */

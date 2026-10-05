@@ -16,8 +16,12 @@ import com.eykcorp.clientes.domain.cliente.Correo;
 import com.eykcorp.clientes.domain.cliente.CorreoDuplicadoException;
 import com.eykcorp.clientes.domain.cliente.Telefono;
 import com.eykcorp.clientes.domain.cliente.ValorInvalidoException;
+import com.eykcorp.clientes.infrastructure.security.PropiedadesDeSeguridadDePrueba;
+import com.eykcorp.clientes.infrastructure.security.SecurityConfig;
+import com.eykcorp.clientes.infrastructure.security.TokensDePrueba;
 import java.time.Instant;
 import java.util.Map;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
@@ -29,7 +33,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @WebFluxTest(ClienteController.class)
-@Import({ClienteWebMapper.class, GlobalExceptionHandler.class})
+@Import({ClienteWebMapper.class, GlobalExceptionHandler.class, SecurityConfig.class})
+@PropiedadesDeSeguridadDePrueba
 class ClienteControllerTest {
 
     private static final Instant AHORA = Instant.parse("2026-10-05T15:30:00Z");
@@ -39,6 +44,7 @@ class ClienteControllerTest {
             "nombres", "Ana", "apellidos", "Pérez", "correo", "ana@example.com", "telefono", "0991234567");
 
     @Autowired
+    private WebTestClient webSinToken;
     private WebTestClient web;
     @MockitoBean
     private CrearClienteUseCase crear;
@@ -50,6 +56,11 @@ class ClienteControllerTest {
     private ActualizarClienteUseCase actualizar;
     @MockitoBean
     private EliminarClienteUseCase eliminar;
+
+    @BeforeEach
+    void autenticar() {
+        web = webSinToken.mutate().defaultHeaders(h -> h.setBearerAuth(TokensDePrueba.tokenVigente())).build();
+    }
 
     @Test
     void post_valido_debe_responder_201_con_location() {
