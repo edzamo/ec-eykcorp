@@ -54,6 +54,21 @@ class ReglasArquitecturaTest {
     }
 
     @Test
+    void debe_detectar_dominio_que_usa_slf4j() {
+        String base = FIXTURE + ".violacion.slf4j";
+        debeDetectar(ReglasArquitectura.elDominioEsJavaPuro(base), importar(base));
+    }
+
+    /** EXC-3: autorizada por el usuario, 2026-10-05; limitada a application. */
+    @Test
+    void debe_permitir_lombok_y_slf4j_en_application() {
+        String base = FIXTURE + ".permitido";
+        debePermitir(
+                ReglasArquitectura.laAplicacionSoloDependeDeDominioYAbstracciones(base), importar(base));
+        debePermitir(ReglasArquitectura.elDominioEsJavaPuro(base), importar(base));
+    }
+
+    @Test
     void debe_detectar_dominio_que_usa_lombok() {
         String base = FIXTURE + ".violacion.lombok";
         debeDetectar(ReglasArquitectura.elDominioEsJavaPuro(base), importar(base));
@@ -93,7 +108,7 @@ class ReglasArquitecturaTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"tx", "transactional", "slf4j", "validation", "data", "lombok"})
+    @ValueSource(strings = {"tx", "transactional", "validation", "data"})
     void debe_detectar_aplicacion_que_depende_de_infraestructura_prohibida(String escenario) {
         String base = FIXTURE + ".violacion." + escenario;
         debeDetectar(
@@ -168,5 +183,18 @@ class ReglasArquitecturaTest {
     void debe_permitir_puerto_con_pocos_metodos() {
         String base = FIXTURE + ".permitido";
         debePermitir(ReglasArquitectura.puertosConComoMaximoSieteMetodos(base), importar(base));
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"intrusorecord", "intruso" + "enum", "intrusoclase"})
+    void debe_detectar_record_enum_o_clase_en_paquetes_de_puertos(String escenario) {
+        String base = FIXTURE + ".violacion." + escenario;
+        debeDetectar(ReglasArquitectura.losPuertosSoloContienenInterfaces(base), importar(base));
+    }
+
+    @Test
+    void debe_permitir_interfaces_en_paquetes_de_puertos() {
+        String base = FIXTURE + ".permitido";
+        debePermitir(ReglasArquitectura.losPuertosSoloContienenInterfaces(base), importar(base));
     }
 }

@@ -10,6 +10,8 @@ import com.tngtech.archunit.lang.ArchRule;
  * {@link ReglasArquitectura} y verificadas con canarios en {@link ReglasArquitecturaTest}.
  *
  * <p>Las reglas no admiten conjuntos vacíos (se retiró {@code allowEmptyShould}).
+ * EXC-3 (autorizada por el usuario, 2026-10-05; limitada a application, el dominio sigue puro):
+ * Lombok y SLF4J permitidos en {@code application}; el dominio sigue sin ellos.
  * Excepción EXC-1 (aplicada por defecto, pendiente de confirmación del usuario): {@code reactor.core..} solo en {@code application}.
  */
 @AnalyzeClasses(
@@ -47,4 +49,8 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule los_modelos_de_infraestructura_no_reutilizan_nombres_de_dominio =
             ReglasArquitectura.modelosDeInfraNoReutilizanNombresDeDominio(BASE);
+
+    @ArchTest
+    static final ArchRule los_paquetes_de_puertos_solo_contienen_interfaces =
+            ReglasArquitectura.losPuertosSoloContienenInterfaces(BASE);
 }

@@ -3,6 +3,7 @@ package com.eykcorp.clientes.infrastructure.adapter.out.persistence;
 import com.eykcorp.clientes.domain.cliente.Cliente;
 import com.eykcorp.clientes.domain.cliente.Correo;
 import com.eykcorp.clientes.domain.cliente.Telefono;
+import java.time.temporal.ChronoUnit;
 import org.springframework.stereotype.Component;
 
 /** Mapeo manual dominio <-> persistencia (D-04), con prueba de ida y vuelta. */
@@ -16,7 +17,9 @@ public class ClienteEntityMapper {
         entidad.setApellidos(cliente.apellidos());
         entidad.setCorreo(cliente.correo().valor());
         entidad.setTelefono(cliente.telefono() == null ? null : cliente.telefono().valor());
-        entidad.setFechaCreacion(cliente.fechaCreacion());
+        // PostgreSQL (TIMESTAMPTZ) guarda microsegundos; un reloj con nanosegundos (Linux) haría que
+        // el POST y un GET posterior devolvieran valores distintos.
+        entidad.setFechaCreacion(cliente.fechaCreacion().truncatedTo(ChronoUnit.MICROS));
         return entidad;
     }
 

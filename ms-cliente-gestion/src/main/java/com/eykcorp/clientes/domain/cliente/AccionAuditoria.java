@@ -1,4 +1,4 @@
-package com.eykcorp.clientes.application.port.out;
+package com.eykcorp.clientes.domain.cliente;
 
 public enum AccionAuditoria {
     CREADO,

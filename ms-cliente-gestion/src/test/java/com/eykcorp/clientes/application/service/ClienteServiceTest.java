@@ -2,8 +2,8 @@ package com.eykcorp.clientes.application.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.eykcorp.clientes.application.port.in.DatosCliente;
-import com.eykcorp.clientes.application.port.out.AccionAuditoria;
+import com.eykcorp.clientes.application.command.DatosCliente;
+import com.eykcorp.clientes.domain.cliente.AccionAuditoria;
 import com.eykcorp.clientes.application.port.out.FakeAuditoriaPort;
 import com.eykcorp.clientes.application.port.out.InMemoryClienteRepository;
 import com.eykcorp.clientes.domain.cliente.Cliente;

@@ -3,6 +3,7 @@ package com.eykcorp.clientes.application.port.out;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.eykcorp.clientes.application.port.out.FakeAuditoriaPort.Registro;
+import com.eykcorp.clientes.domain.cliente.AccionAuditoria;
 import com.eykcorp.clientes.domain.cliente.Cliente;
 import com.eykcorp.clientes.domain.cliente.Correo;
 import com.eykcorp.clientes.domain.cliente.Telefono;

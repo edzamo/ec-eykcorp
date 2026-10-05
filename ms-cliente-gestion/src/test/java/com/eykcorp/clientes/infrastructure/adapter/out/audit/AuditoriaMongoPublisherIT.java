@@ -2,7 +2,7 @@ package com.eykcorp.clientes.infrastructure.adapter.out.audit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.eykcorp.clientes.application.port.out.AccionAuditoria;
+import com.eykcorp.clientes.domain.cliente.AccionAuditoria;
 import com.eykcorp.clientes.application.port.out.AuditoriaPort;
 import com.eykcorp.clientes.application.port.out.AuditoriaPortContract;
 import com.eykcorp.clientes.application.port.out.FakeAuditoriaPort.Registro;

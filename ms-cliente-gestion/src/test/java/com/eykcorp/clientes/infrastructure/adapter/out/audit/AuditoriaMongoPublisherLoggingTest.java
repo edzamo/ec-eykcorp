@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.eykcorp.clientes.CapturaLogs;
 import com.eykcorp.clientes.domain.cliente.AccionAuditoria;
 import com.eykcorp.clientes.domain.cliente.Cliente;
 import com.eykcorp.clientes.domain.cliente.Correo;
@@ -17,20 +18,22 @@ import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-class AuditoriaMongoPublisherTest {
+class AuditoriaMongoPublisherLoggingTest {
 
     @Test
-    void debe_propagar_el_error_de_mongo_para_que_el_caso_de_uso_decida() {
+    void registrar_debe_loguear_debug_con_accion_e_id_sin_datos_personales() {
         ReactiveMongoTemplate mongo = mock(ReactiveMongoTemplate.class);
-        when(mongo.insert(any(AuditoriaDocument.class))).thenReturn(Mono.error(new IllegalStateException("caído")));
+        when(mongo.insert(any(AuditoriaDocument.class))).thenAnswer(i -> Mono.just(i.getArgument(0)));
         Instant ahora = Instant.parse("2026-10-05T15:30:00Z");
         var publicador = new AuditoriaMongoPublisher(mongo, new AuditoriaDocumentMapper(),
                 Clock.fixed(ahora, ZoneOffset.UTC));
         Cliente cliente = Cliente.crear(7L, "Ana", "Pérez", Correo.de("ana@example.com"),
                 Telefono.de("0991234567"), ahora);
 
-        StepVerifier.create(publicador.registrar(AccionAuditoria.CREADO, cliente))
-                .expectErrorSatisfies(e -> assertThat(e).isInstanceOf(IllegalStateException.class))
-                .verify();
+        try (CapturaLogs logs = CapturaLogs.de(AuditoriaMongoPublisher.class)) {
+            StepVerifier.create(publicador.registrar(AccionAuditoria.CREADO, cliente)).verifyComplete();
+
+            assertThat(logs.mensajes()).containsExactly("DEBUG Registrando auditoría accion=CREADO id=7");
+        }
     }
 }
