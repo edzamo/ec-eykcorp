@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { createRouter, createMemoryHistory } from 'vue-router'
+import { AUTH_KEY } from '../../../src/app/keys.js'
 import LoginPage from '../../../src/pages/LoginPage.vue'
 import { ApiError } from '../../../src/services/httpClient.js'
 import { campo, boton } from '../../support/dom.js'
@@ -14,7 +15,7 @@ async function montar(login) {
     ],
   })
   await router.push('/login')
-  const w = mount(LoginPage, { global: { plugins: [router], provide: { auth: { login } } } })
+  const w = mount(LoginPage, { global: { plugins: [router], provide: { [AUTH_KEY]: { login } } } })
   return { w, router }
 }
 async function enviar(w, u = 'admin', p = 'pw') {
@@ -25,6 +26,11 @@ async function enviar(w, u = 'admin', p = 'pw') {
 }
 
 describe('LoginPage', () => {
+  it('no_debe_usar_estilos_inline_ni_main_propio', async () => {
+    const { w } = await montar(vi.fn())
+    expect(w.html()).not.toMatch(/\sstyle=/)
+    expect(w.find('main').exists()).toBe(false)
+  })
   it('debe_ocultar_la_contraseña', async () => {
     const { w } = await montar(vi.fn())
     expect(campo(w, 'Contraseña').attributes('type')).toBe('password')

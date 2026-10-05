@@ -15,4 +15,11 @@ describe('App', () => {
     expect(headings).toHaveLength(1)
     expect(headings[0].text()).toBe('Clientes')
   })
+
+  it('debe_envolver_el_contenido_principal_en_un_unico_main', () => {
+    const router = createRouter({ history: createMemoryHistory(), routes: [] })
+    const wrapper = mount(App, { global: { plugins: [router] } })
+    expect(wrapper.findAll('main')).toHaveLength(1)
+    expect(wrapper.find('main').find('h1').exists()).toBe(false)
+  })
 })

@@ -84,4 +84,30 @@ describe('useClientes', () => {
     expect(s.clientes.value).toEqual([c1])
     expect(s.error.value).toBeInstanceOf(Error)
   })
+
+  // Tests de caracterización del contrato (CR-008): no cuentan como ciclo RED.
+  describe('contrato_de_errores', () => {
+    const boom = new Error('boom')
+    it('crear_lanza_y_no_guarda_en_error', async () => {
+      const s = useClientes({ crear: vi.fn().mockRejectedValue(boom) })
+      await expect(s.crear({})).rejects.toBe(boom)
+      expect(s.error.value).toBeNull()
+      expect(s.clientes.value).toEqual([])
+    })
+    it('actualizar_lanza_y_no_guarda_en_error', async () => {
+      const s = useClientes({ actualizar: vi.fn().mockRejectedValue(boom) })
+      await expect(s.actualizar(1, {})).rejects.toBe(boom)
+      expect(s.error.value).toBeNull()
+    })
+    it('cargar_no_lanza_y_guarda_en_error', async () => {
+      const s = useClientes({ listar: vi.fn().mockRejectedValue(boom) })
+      await expect(s.cargar()).resolves.toBeUndefined()
+      expect(s.error.value).toBe(boom)
+    })
+    it('eliminar_no_lanza_y_guarda_en_error', async () => {
+      const s = useClientes({ eliminar: vi.fn().mockRejectedValue(boom) })
+      await expect(s.eliminar(1)).resolves.toBeUndefined()
+      expect(s.error.value).toBe(boom)
+    })
+  })
 })

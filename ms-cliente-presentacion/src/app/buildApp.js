@@ -5,6 +5,7 @@ import { createClienteService } from '../services/clienteService.js'
 import { createAuthService } from '../services/authService.js'
 import { createAuth } from '../domain/useAuth.js'
 import { createAppRouter } from './router.js'
+import { AUTH_KEY, CLIENTE_SERVICE_KEY } from './keys.js'
 
 // Composition root: único lugar que conoce todas las implementaciones.
 export function buildApp({ baseUrl = '/api', storage = globalThis.sessionStorage, history } = {}) {
@@ -22,8 +23,8 @@ export function buildApp({ baseUrl = '/api', storage = globalThis.sessionStorage
   router = createAppRouter({ auth, history })
 
   const app = createApp(App)
-  app.provide('auth', auth)
-  app.provide('clienteService', createClienteService(httpClient))
+  app.provide(AUTH_KEY, auth)
+  app.provide(CLIENTE_SERVICE_KEY, createClienteService(httpClient))
   app.use(router)
   return { app, router, auth }
 }

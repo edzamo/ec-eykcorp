@@ -124,4 +124,17 @@ describe('httpClient', () => {
     expect(onUnauthorized).toHaveBeenCalledOnce()
     expect(err.status).toBe(401)
   })
+
+  it('no_debe_invocar_onUnauthorized_cuando_el_401_viene_del_propio_login', async () => {
+    server.use(
+      http.post(`${BASE}/auth/login`, () =>
+        HttpResponse.json({ status: 401, title: 'No autorizado' }, { status: 401 }),
+      ),
+    )
+    const onUnauthorized = vi.fn()
+    await expect(
+      crear({ onUnauthorized }).post('/auth/login', { usuario: 'u', password: 'x' }),
+    ).rejects.toMatchObject({ status: 401 })
+    expect(onUnauthorized).not.toHaveBeenCalled()
+  })
 })

@@ -1,5 +1,5 @@
 <script setup>
-import { reactive, ref, useId } from 'vue'
+import { onMounted, reactive, ref, useId } from 'vue'
 
 const props = defineProps({
   cliente: { type: Object, default: null },
@@ -9,7 +9,14 @@ const props = defineProps({
 const emit = defineEmits(['guardar', 'cancelar'])
 
 // La validación local es solo de UX; el backend es la fuente de verdad (FE-01).
-const EMAIL_UX = /^\S+@\S+\.\S+$/
+// Sin regex con cuantificadores anidados/solapados (backtracking, Sonar S5852): comprobación lineal.
+// Equivale a /^[^\s@]+@[^\s@]+\.[^\s@]+$/ pero en O(n).
+function correoUxValido(valor) {
+  if (/\s/.test(valor)) return false
+  const arroba = valor.indexOf('@')
+  if (arroba < 1 || arroba !== valor.lastIndexOf('@')) return false
+  return valor.slice(arroba + 2, -1).includes('.')
+}
 const idBase = useId()
 const campos = [
   { name: 'nombres', label: 'Nombres', type: 'text' },
@@ -24,26 +31,29 @@ const form = reactive({
   telefono: props.cliente?.telefono ?? '',
 })
 const local = ref({})
+const formEl = ref(null)
+onMounted(() => formEl.value?.querySelector('input')?.focus())
 
 function validar() {
   const e = {}
   if (!form.nombres.trim()) e.nombres = 'Los nombres son obligatorios'
   if (!form.apellidos.trim()) e.apellidos = 'Los apellidos son obligatorios'
   if (!form.correo.trim()) e.correo = 'El correo es obligatorio'
-  else if (!EMAIL_UX.test(form.correo)) e.correo = 'Ingrese un correo válido'
+  else if (!correoUxValido(form.correo)) e.correo = 'Ingrese un correo válido'
   return e
 }
 
 function enviar() {
   local.value = validar()
-  if (Object.keys(local.value).length === 0) emit('guardar', { ...form })
+  if (Object.keys(local.value).length === 0)
+    emit('guardar', { ...form, telefono: form.telefono.trim() || null })
 }
 
 const mensaje = (name) => local.value[name] ?? props.errores[name]
 </script>
 
 <template>
-  <form novalidate @submit.prevent="enviar">
+  <form ref="formEl" novalidate @submit.prevent="enviar">
     <div v-for="f in campos" :key="f.name" class="mb-3">
       <label :for="`${idBase}-${f.name}`" class="form-label">{{ f.label }}</label>
       <input

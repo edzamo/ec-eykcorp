@@ -25,8 +25,9 @@ async function arrancar(storage) {
   await flushPromises()
   const texto = () => el.textContent
   const h1s = () => [...el.querySelectorAll('h1')].map((h) => h.textContent)
+  const mains = () => el.querySelectorAll('main').length
   const boton = (t) => [...el.querySelectorAll('button')].find((b) => b.textContent.trim() === t)
-  return { router, storage, texto, h1s, boton }
+  return { router, storage, texto, h1s, boton, mains, el }
 }
 
 describe('composition root', () => {
@@ -74,5 +75,36 @@ describe('composition root', () => {
   it('debe_mostrar_el_encabezado_h1_Clientes', async () => {
     const { h1s } = await arrancar(memStorage())
     expect(h1s()).toEqual(['Clientes'])
+  })
+
+  it('debe_tener_un_unico_main_con_el_contenido_tanto_en_login_como_en_clientes', async () => {
+    const login = await arrancar(memStorage())
+    expect(login.mains()).toBe(1)
+    expect(login.el.querySelector('main').textContent).toContain('Iniciar sesión')
+    server.use(http.get(`${BASE}/clientes`, () => HttpResponse.json([])))
+    const clientes = await arrancar(memStorage({ token: 'jwt1' }))
+    expect(clientes.mains()).toBe(1)
+    expect(clientes.el.querySelector('main').textContent).toContain('Listado de clientes')
+  })
+
+  it('debe_mostrar_el_error_en_el_formulario_sin_redirigir_con_credenciales_incorrectas', async () => {
+    server.use(
+      http.post(`${BASE}/auth/login`, () =>
+        HttpResponse.json({ status: 401, title: 'No autorizado' }, { status: 401 }),
+      ),
+    )
+    const { el, router, texto, storage } = await arrancar(memStorage())
+    const input = (i) => el.querySelectorAll('input')[i]
+    input(0).value = 'admin'
+    input(0).dispatchEvent(new Event('input'))
+    input(1).value = 'mala'
+    input(1).dispatchEvent(new Event('input'))
+    el.querySelector('form').dispatchEvent(new Event('submit', { cancelable: true }))
+    await flushPromises()
+    await new Promise((r) => setTimeout(r, 30))
+    await flushPromises()
+    expect(texto()).toContain('Usuario o contraseña incorrectos')
+    expect(router.currentRoute.value.path).toBe('/login')
+    expect(storage.getItem('token')).toBeNull()
   })
 })

@@ -1,9 +1,10 @@
 <script setup>
 import { inject, reactive, ref, useId } from 'vue'
 import { useRouter } from 'vue-router'
+import { AUTH_KEY } from '../app/keys.js'
 import ErrorAlert from '../components/ErrorAlert.vue'
 
-const auth = inject('auth')
+const auth = inject(AUTH_KEY)
 const router = useRouter()
 const idBase = useId()
 const form = reactive({ usuario: '', password: '' })
@@ -29,7 +30,7 @@ async function enviar() {
 </script>
 
 <template>
-  <main class="container py-5" style="max-width: 420px">
+  <div class="container py-5 login-container">
     <h2 class="h4 mb-3">Iniciar sesión</h2>
     <ErrorAlert v-if="error" :mensaje="error" />
     <form novalidate @submit.prevent="enviar">
@@ -55,5 +56,11 @@ async function enviar() {
       </div>
       <button type="submit" class="btn btn-primary" :disabled="enviando">Ingresar</button>
     </form>
-  </main>
+  </div>
 </template>
+
+<style scoped>
+.login-container {
+  max-width: 420px;
+}
+</style>

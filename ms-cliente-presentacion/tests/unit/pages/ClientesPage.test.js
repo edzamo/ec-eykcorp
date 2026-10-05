@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeAll, afterEach, afterAll } from 'vitest
 import { mount, flushPromises } from '@vue/test-utils'
 import { http, HttpResponse, delay } from 'msw'
 import { setupServer } from 'msw/node'
+import { CLIENTE_SERVICE_KEY } from '../../../src/app/keys.js'
 import ClientesPage from '../../../src/pages/ClientesPage.vue'
 import { createHttpClient } from '../../../src/services/httpClient.js'
 import { createClienteService } from '../../../src/services/clienteService.js'
@@ -28,7 +29,7 @@ const listaHandler = (data = [ana, luis]) => http.get(`${BASE}/clientes`, () => 
 async function montar({ onUnauthorized = vi.fn() } = {}) {
   const client = createHttpClient({ baseUrl: BASE, getToken: () => 't', onUnauthorized })
   const w = mount(ClientesPage, {
-    global: { provide: { clienteService: createClienteService(client) } },
+    global: { provide: { [CLIENTE_SERVICE_KEY]: createClienteService(client) } },
     attachTo: document.body,
   })
   await flushPromises()
@@ -48,7 +49,9 @@ describe('ClientesPage', () => {
       }),
     )
     const w = mount(ClientesPage, {
-      global: { provide: { clienteService: createClienteService(createHttpClient({ baseUrl: BASE })) } },
+      global: {
+        provide: { [CLIENTE_SERVICE_KEY]: createClienteService(createHttpClient({ baseUrl: BASE })) },
+      },
     })
     await w.vm.$nextTick()
     expect(w.find('[role="status"]').exists()).toBe(true)
@@ -108,6 +111,45 @@ describe('ClientesPage', () => {
     await esperar()
     expect(body).toEqual({ nombres: 'Luis', apellidos: 'Gómez', correo: 'luis@x.com', telefono: '555' })
     expect(w.text()).toContain('Gómez')
+    expect(w.find('form').exists()).toBe(false)
+  })
+
+  it('debe_crear_un_cliente_sin_telefono_enviando_telefono_null', async () => {
+    server.use(listaHandler([]))
+    let body
+    server.use(
+      http.post(`${BASE}/clientes`, async ({ request }) => {
+        body = await request.json()
+        return HttpResponse.json({ ...luis, telefono: null }, { status: 201 })
+      }),
+    )
+    const w = await montar()
+    await boton(w, 'Nuevo cliente').trigger('click')
+    await campo(w, 'Nombres').setValue('Luis')
+    await campo(w, 'Apellidos').setValue('Gómez')
+    await campo(w, 'Correo').setValue('luis@x.com')
+    await w.find('form').trigger('submit')
+    await esperar()
+    expect(body).toEqual({ nombres: 'Luis', apellidos: 'Gómez', correo: 'luis@x.com', telefono: null })
+    expect(w.text()).toContain('Gómez')
+    expect(w.find('form').exists()).toBe(false)
+  })
+
+  it('debe_editar_un_cliente_con_telefono_null_mostrando_el_campo_vacio', async () => {
+    server.use(listaHandler([{ ...ana, telefono: null }]))
+    let body
+    server.use(
+      http.put(`${BASE}/clientes/1`, async ({ request }) => {
+        body = await request.json()
+        return HttpResponse.json({ ...ana, ...body })
+      }),
+    )
+    const w = await montar()
+    await boton(w, 'Editar Ana Pérez').trigger('click')
+    expect(campo(w, 'Teléfono').element.value).toBe('')
+    await w.find('form').trigger('submit')
+    await esperar()
+    expect(body.telefono).toBeNull()
     expect(w.find('form').exists()).toBe(false)
   })
 
@@ -177,6 +219,19 @@ describe('ClientesPage', () => {
     expect(body.nombres).toBe('Anita')
     expect(w.text()).toContain('Anita')
     expect(w.find('form').exists()).toBe(false)
+  })
+
+  it('debe_enfocar_el_primer_campo_al_abrir_el_formulario_de_alta_y_de_edicion', async () => {
+    server.use(listaHandler([ana]))
+    const w = await montar()
+    await boton(w, 'Nuevo cliente').trigger('click')
+    await flushPromises()
+    expect(document.activeElement).toBe(campo(w, 'Nombres').element)
+    await boton(w, 'Cancelar').trigger('click')
+    await boton(w, 'Editar Ana Pérez').trigger('click')
+    await flushPromises()
+    expect(document.activeElement).toBe(campo(w, 'Nombres').element)
+    w.unmount()
   })
 
   it('debe_cerrar_el_formulario_al_cancelar', async () => {

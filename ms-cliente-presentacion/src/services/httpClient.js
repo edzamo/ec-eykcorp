@@ -1,3 +1,5 @@
+const LOGIN_PATH = '/auth/login'
+
 export class ApiError extends Error {
   constructor({ status, title, detail, errores } = {}) {
     super(detail || title || 'Error de red')
@@ -36,7 +38,8 @@ export function createHttpClient({ baseUrl = '/api', getToken, onUnauthorized, f
     }
     if (!res.ok) {
       const err = await leerError(res)
-      if (res.status === 401) onUnauthorized?.()
+      // El 401 del propio login son credenciales incorrectas, no una sesión caducada.
+      if (res.status === 401 && path !== LOGIN_PATH) onUnauthorized?.()
       throw err
     }
     return res.status === 204 ? null : res.json()

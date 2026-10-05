@@ -1,8 +1,9 @@
 <script setup>
 import { inject } from 'vue'
 import { useRouter } from 'vue-router'
+import { AUTH_KEY } from './app/keys.js'
 
-const auth = inject('auth', null)
+const auth = inject(AUTH_KEY, null)
 const router = useRouter()
 
 async function cerrarSesion() {
@@ -24,6 +25,8 @@ async function cerrarSesion() {
         Cerrar sesión
       </button>
     </header>
-    <router-view />
+    <main>
+      <router-view />
+    </main>
   </div>
 </template>
