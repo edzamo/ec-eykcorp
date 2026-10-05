@@ -2,7 +2,7 @@
 
 Prueba de concepto de un **CRUD de clientes** con backend reactivo en arquitectura hexagonal, frontend SPA en Vue 3 y despliegue dockerizado.
 
-> Estado: **v0.1.0, implementado y verificado** (ver [Estado de la entrega](#estado-de-la-entrega)). Este documento recoge los requerimientos, la arquitectura y las decisiones; cada microservicio tiene además su propio README.
+> Estado: **v0.2.0, implementado y verificado** (ver [Estado de la entrega](#estado-de-la-entrega)). Este documento recoge los requerimientos, la arquitectura y las decisiones; cada microservicio tiene además su propio README.
 
 ## Primer uso: levantar la aplicación y entrar
 
@@ -895,7 +895,9 @@ Regla de trabajo: **TDD**. Cada historia empieza con un test que falla (RED), se
 | E4 AWS local (LocalStack) | **Parcial** | Servicio, recursos S3/SQS/Secrets Manager y despliegue de la SPA a S3 simulado: hechos y probados. Adaptadores del backend (Secrets Manager, SQS): pendientes |
 | E5 Entrega | Hecha, con deuda | READMEs, revisiones de calidad y seguridad realizadas. Deuda abajo |
 
-**Verificación (v0.1.0):** backend 217 tests (JUnit, ArchUnit, Testcontainers con PostgreSQL y MongoDB reales; 95 % de líneas), frontend 106 tests (Vitest y MSW; 100 % de líneas), `scripts/smoke-test.sh` contra el sistema completo levantado con `docker compose up` (14 comprobaciones: SPA, proxy, 401, login, CRUD, 400, 404 y 409).
+**Verificación (v0.2.0):** backend 254 tests (JUnit, ArchUnit, Testcontainers con PostgreSQL y MongoDB reales, conformidad con el contrato OpenAPI; ~95 % de líneas), frontend 106 tests (Vitest y MSW; 100 % de líneas), CI en verde y `scripts/smoke-test.sh` contra el sistema completo levantado con `docker compose up` (14 comprobaciones: SPA, proxy, 401, login, CRUD, 400, 404 y 409).
+
+**Contrato de la API:** el YAML OpenAPI es la fuente de verdad (`ms-cliente-gestion/src/main/resources/static/openapi/ms-cliente-gestion.yaml`) y Swagger UI queda en `http://localhost:8080/api/swagger-ui.html`.
 
 **Deuda conocida y decisiones pendientes**
 
