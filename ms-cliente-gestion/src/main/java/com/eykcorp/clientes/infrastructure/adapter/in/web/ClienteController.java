@@ -7,6 +7,7 @@ import com.eykcorp.clientes.application.port.in.ListarClientesUseCase;
 import com.eykcorp.clientes.application.port.in.ObtenerClienteUseCase;
 import jakarta.validation.Valid;
 import java.net.URI;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -23,6 +24,7 @@ import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping("/clientes")
+@RequiredArgsConstructor
 public class ClienteController {
 
     private final CrearClienteUseCase crear;
@@ -31,21 +33,6 @@ public class ClienteController {
     private final ActualizarClienteUseCase actualizar;
     private final EliminarClienteUseCase eliminar;
     private final ClienteWebMapper mapper;
-
-    public ClienteController(
-            CrearClienteUseCase crear,
-            ListarClientesUseCase listar,
-            ObtenerClienteUseCase obtener,
-            ActualizarClienteUseCase actualizar,
-            EliminarClienteUseCase eliminar,
-            ClienteWebMapper mapper) {
-        this.crear = crear;
-        this.listar = listar;
-        this.obtener = obtener;
-        this.actualizar = actualizar;
-        this.eliminar = eliminar;
-        this.mapper = mapper;
-    }
 
     @PostMapping
     public Mono<ResponseEntity<ClienteResponse>> crear(@Valid @RequestBody ClienteRequest peticion) {

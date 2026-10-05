@@ -54,6 +54,12 @@ class ReglasArquitecturaTest {
     }
 
     @Test
+    void debe_detectar_dominio_que_usa_lombok() {
+        String base = FIXTURE + ".violacion.lombok";
+        debeDetectar(ReglasArquitectura.elDominioEsJavaPuro(base), importar(base));
+    }
+
+    @Test
     void debe_detectar_aplicacion_que_depende_de_reactor_util() {
         String base = FIXTURE + ".violacion.aplicacion";
         debeDetectar(
@@ -87,7 +93,7 @@ class ReglasArquitecturaTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"tx", "slf4j", "validation", "data"})
+    @ValueSource(strings = {"tx", "slf4j", "validation", "data", "lombok"})
     void debe_detectar_aplicacion_que_depende_de_infraestructura_prohibida(String escenario) {
         String base = FIXTURE + ".violacion." + escenario;
         debeDetectar(

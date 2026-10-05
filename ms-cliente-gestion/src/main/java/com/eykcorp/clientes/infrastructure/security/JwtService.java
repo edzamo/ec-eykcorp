@@ -11,17 +11,14 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import lombok.RequiredArgsConstructor;
 
 /** Emite JWT HS256 (sub, iss, iat, exp) usando el {@link Clock} inyectado. */
+@RequiredArgsConstructor
 public class JwtService {
 
     private final JwtProperties propiedades;
     private final Clock reloj;
-
-    public JwtService(JwtProperties propiedades, Clock reloj) {
-        this.propiedades = propiedades;
-        this.reloj = reloj;
-    }
 
     public TokenEmitido emitir(String usuario) {
         Instant ahora = reloj.instant();

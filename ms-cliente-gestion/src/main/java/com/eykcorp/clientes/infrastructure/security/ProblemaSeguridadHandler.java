@@ -2,6 +2,8 @@ package com.eykcorp.clientes.infrastructure.security;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,13 +20,10 @@ import reactor.core.publisher.Mono;
  * errores de transporte (INV-15): estos rechazos ocurren en la cadena de filtros, antes de llegar a
  * los controladores, por lo que {@code GlobalExceptionHandler} no los ve. Mantiene el mismo formato.
  */
+@RequiredArgsConstructor(access = AccessLevel.PACKAGE)
 class ProblemaSeguridadHandler implements ServerAuthenticationEntryPoint, ServerAccessDeniedHandler {
 
     private final ObjectMapper objectMapper;
-
-    ProblemaSeguridadHandler(ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
 
     @Override
     public Mono<Void> commence(ServerWebExchange exchange, AuthenticationException error) {

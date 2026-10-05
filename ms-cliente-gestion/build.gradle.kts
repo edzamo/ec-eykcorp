@@ -34,6 +34,12 @@ dependencies {
     runtimeOnly("org.springframework:spring-jdbc")
     runtimeOnly("org.postgresql:postgresql")
 
+    // Lombok: solo en infrastructure (INV-12 / ARCH-011; lo vigila ReglasArquitectura)
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+    testCompileOnly("org.projectlombok:lombok")
+    testAnnotationProcessor("org.projectlombok:lombok")
+
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.springframework.security:spring-security-test")

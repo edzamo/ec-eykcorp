@@ -5,8 +5,7 @@ import com.eykcorp.clientes.domain.cliente.CorreoDuplicadoException;
 import com.eykcorp.clientes.domain.cliente.ValorInvalidoException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
@@ -21,9 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
  * seguridad los traduce {@code ProblemaSeguridadHandler} (segundo punto de transporte, INV-15).
  */
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
-
-    private static final Logger LOG = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(WebExchangeBindException.class)
     ProblemDetail validacion(WebExchangeBindException error) {
@@ -66,7 +64,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     ProblemDetail inesperado(Exception error) {
-        LOG.error("Error no controlado", error);
+        log.error("Error no controlado", error);
         return problema(HttpStatus.INTERNAL_SERVER_ERROR, "Error interno", "Error interno del servidor");
     }
 
