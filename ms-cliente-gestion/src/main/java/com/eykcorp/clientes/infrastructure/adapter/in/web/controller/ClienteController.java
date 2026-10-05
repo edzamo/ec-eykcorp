@@ -12,6 +12,7 @@ import com.eykcorp.clientes.application.port.in.ObtenerClienteUseCase;
 import jakarta.validation.Valid;
 import java.net.URI;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @RestController
 @RequestMapping("/clientes")
 @RequiredArgsConstructor
@@ -40,6 +42,7 @@ public class ClienteController {
 
     @PostMapping
     public Mono<ResponseEntity<ClienteResponse>> crear(@Valid @RequestBody ClienteRequest peticion) {
+        log.debug("POST /clientes");
         return crear.crear(mapper.aDatos(peticion))
                 .map(mapper::aRespuesta)
                 .map(r -> ResponseEntity.created(URI.create("/clientes/" + r.id())).body(r));
@@ -47,23 +50,27 @@ public class ClienteController {
 
     @GetMapping
     public Flux<ClienteResponse> listar() {
+        log.debug("GET /clientes");
         return listar.listar().map(mapper::aRespuesta);
     }
 
     @GetMapping("/{id}")
     public Mono<ClienteResponse> obtener(@PathVariable Long id) {
+        log.debug("GET /clientes/{}", id);
         return obtener.obtener(id).map(mapper::aRespuesta);
     }
 
     @PutMapping("/{id}")
     public Mono<ClienteResponse> actualizar(
             @PathVariable Long id, @Valid @RequestBody ClienteRequest peticion) {
+        log.debug("PUT /clientes/{}", id);
         return actualizar.actualizar(id, mapper.aDatos(peticion)).map(mapper::aRespuesta);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> eliminar(@PathVariable Long id) {
+        log.debug("DELETE /clientes/{}", id);
         return eliminar.eliminar(id);
     }
 }
