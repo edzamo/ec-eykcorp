@@ -4,8 +4,70 @@ Prueba de concepto de un **CRUD de clientes** con backend reactivo en arquitectu
 
 > Estado: **v0.1.0, implementado y verificado** (ver [Estado de la entrega](#estado-de-la-entrega)). Este documento recoge los requerimientos, la arquitectura y las decisiones; cada microservicio tiene además su propio README.
 
+## Primer uso: levantar la aplicación y entrar
+
+Guía rápida para quien clona el repositorio por primera vez.
+
+**Requisitos:** Docker y Docker Compose v2 (nada más: Java y Node no hacen falta). Funciona en Intel y en Apple Silicon.
+
+```bash
+git clone https://github.com/edzamo/ec-eykcorp.git
+cd ec-eykcorp
+
+./scripts/init-env.sh          # crea el archivo .env (secretos aleatorios + usuario de demostración)
+docker compose up --build      # construye y levanta PostgreSQL, MongoDB, el backend y el frontend
+```
+
+La primera vez tarda unos minutos porque compila el backend y el frontend dentro de Docker. Cuando termine, abre **http://localhost:8080**.
+
+### Credenciales de demostración
+
+| Campo | Valor |
+|---|---|
+| Usuario | `admin` |
+| Contraseña | `Eyk-Demo-2026` |
+
+> **Solo para uso local y evaluación.** Son credenciales públicas, escritas aquí a propósito para poder entrar sin configurar nada. **Nunca** se usan en otro entorno: allí define tu propia contraseña con `ADMIN_PASSWORD='tu-contraseña' ./scripts/init-env.sh --force`. Las contraseñas de las bases de datos y el secreto del token (JWT) **no** son estas: se generan aleatorias en tu `.env`, que está ignorado por git y no se sube nunca.
+
+### Qué vas a ver
+
+1. Una pantalla de **inicio de sesión**: entra con las credenciales de arriba.
+2. La lista de **clientes**, donde puedes crear, editar y eliminar (con confirmación). Se muestran estados de carga y mensajes de error.
+3. Cada alta, cambio o baja queda registrado en la **auditoría** de MongoDB.
+
+### Comprobar que todo funciona
+
+```bash
+ADMIN_USER=admin ADMIN_PASSWORD='Eyk-Demo-2026' ./scripts/smoke-test.sh
+```
+
+Ejecuta 14 comprobaciones sobre el sistema completo (página, proxy, 401, login, CRUD, validaciones y duplicados). Debe terminar con "Todo en orden."
+
+### Apagar y empezar de cero
+
+```bash
+docker compose down          # apaga; conserva los datos
+docker compose down -v       # apaga y borra los datos (clientes y auditoría)
+```
+
+### Si algo falla
+
+| Síntoma | Causa y solución |
+|---|---|
+| `Ya existe …/.env` | Ya tienes uno. Usa `./scripts/init-env.sh --force` para regenerarlo (borra el anterior). |
+| `required variable … is missing` al levantar | Falta el `.env`: ejecuta `./scripts/init-env.sh`. |
+| El puerto 8080 está ocupado | Cierra lo que lo use o cambia `"8080:8080"` en `docker-compose.yml`. |
+| Al iniciar sesión sale "Too Many Requests" (429) | Nginx limita el login a 5 intentos por minuto por IP; espera un minuto. |
+| Cambié la contraseña en `.env` y no funciona | El backend la lee al arrancar: `docker compose up -d --force-recreate ms-cliente-gestion`. |
+| Error `no match for platform` al construir | Estás usando una versión antigua del repo; las imágenes actuales son multiplataforma (amd64 y arm64). |
+
+Más detalle de cada pieza: [`ms-cliente-gestion`](ms-cliente-gestion/README.md) (backend) y [`ms-cliente-presentacion`](ms-cliente-presentacion/README.md) (frontend).
+
+---
+
 ## Índice
 
+0. [Primer uso: levantar la aplicación y entrar](#primer-uso-levantar-la-aplicación-y-entrar)
 1. [Objetivo y alcance](#1-objetivo-y-alcance)
 2. [Requerimientos](#2-requerimientos)
 3. [Stack tecnológico](#3-stack-tecnológico)
@@ -97,6 +159,15 @@ Decisiones propias que van más allá del enunciado original:
 - Pruebas unitarias, de integración y e2e en backend y frontend.
 - JWT para proteger la API (Épica 2).
 - Documentación con diagramas UML versionados como código (Mermaid).
+
+### 2.5 Acceso a la aplicación y credenciales por defecto
+
+Requerimiento de seguridad y de usabilidad añadido por este proyecto:
+
+- La API y la interfaz exigen autenticación (JWT). No hay endpoints de negocio públicos.
+- Debe existir un **usuario por defecto documentado** para poder evaluar el sistema sin configuración manual: `admin` con la contraseña de demostración del [manual de primer uso](#primer-uso-levantar-la-aplicación-y-entrar).
+- **Ningún secreto real se versiona.** Las credenciales de las bases de datos y el secreto JWT son aleatorios por instalación (`scripts/init-env.sh`) y viven solo en `.env`, ignorado por git. En la aplicación, la contraseña del administrador se guarda únicamente como hash BCrypt (`ADMIN_PASSWORD_HASH`), nunca en claro.
+- La contraseña de demostración es **pública**: solo es válida en entornos locales y de evaluación. En cualquier otro entorno se sustituye con `ADMIN_PASSWORD`.
 
 ---
 
@@ -668,7 +739,7 @@ sequenceDiagram
 
 - **Autenticación:** `POST /auth/login` devuelve un JWT HS256.
 - **Sin caso de uso de negocio:** el login es un mecanismo de seguridad de infraestructura (`infrastructure.security`: `AutenticadorAdministrador` y `JwtService`), no una regla de negocio; crear un puerto solo para comparar un hash sería sobreingeniería. Si el alcance crece (varios usuarios, roles), se promueve a un puerto `CredencialesPort`.
-- **Usuario:** un único administrador definido por variables de entorno, con contraseña en BCrypt. Sin tabla de usuarios por ahora.
+- **Usuario:** un único administrador definido por variables de entorno, con contraseña en BCrypt. Sin tabla de usuarios por ahora. Para evaluación local existe un usuario de demostración documentado en el [manual de primer uso](#primer-uso-levantar-la-aplicación-y-entrar) (§2.5); no es válido fuera de entornos locales.
 - **Autorización:** todos los endpoints `/clientes/**` requieren token válido.
 - **CORS:** en producción no hace falta, porque Nginx sirve el frontend y la API bajo el mismo origen. En desarrollo local se permite el origen de Vite.
 - **HTTPS:** requisito de despliegue. Esta versión sirve HTTP en el puerto 8080; el TLS (y la cabecera HSTS) se termina en un balanceador o proxy delante, o se añade a Nginx con un certificado. No está implementado en el repo.

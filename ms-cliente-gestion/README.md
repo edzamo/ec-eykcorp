@@ -25,10 +25,7 @@ Microservicio de **gestión de clientes**: crea, consulta, actualiza y elimina c
 Desde la **raíz del repositorio**:
 
 ```bash
-cp .env.example .env
-# Completa en .env: POSTGRES_PASSWORD, MONGO_PASSWORD, JWT_SECRET (>= 32 caracteres), ADMIN_PASSWORD_HASH
-#   openssl rand -hex 24        -> contraseñas de las bases de datos
-#   openssl rand -base64 48     -> JWT_SECRET
+./scripts/init-env.sh       # genera .env: secretos aleatorios y usuario de demostración (admin / Eyk-Demo-2026)
 docker compose up --build
 ```
 

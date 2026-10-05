@@ -23,7 +23,7 @@ Interfaz web de **gestión de clientes**: inicio de sesión, listado, alta, edic
 Desde la **raíz del repositorio**:
 
 ```bash
-cp .env.example .env     # completa los secretos (ver README del backend)
+./scripts/init-env.sh    # genera .env (usuario de demostración: admin / Eyk-Demo-2026, solo local)
 docker compose up --build
 ```
 
