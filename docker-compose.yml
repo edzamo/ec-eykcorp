@@ -21,8 +21,69 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  mongo:
+    image: mongo:7.0.43
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?defina MONGO_USER en .env}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?defina MONGO_PASSWORD en .env}
+    volumes:
+      - mongodata:/data/db
+    networks:
+      - eyk-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  ms-cliente-crud:
+    build:
+      context: ./ms-cliente-crud
+    image: eykcorp/ms-cliente-crud:0.1.0
+    environment:
+      SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/auditoria?authSource=admin&serverSelectionTimeoutMS=2000
+      JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET (>=32 caracteres) en .env}
+      JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-30}
+      ADMIN_USER: ${ADMIN_USER:?defina ADMIN_USER en .env}
+      ADMIN_PASSWORD_HASH: ${ADMIN_PASSWORD_HASH:?defina ADMIN_PASSWORD_HASH (BCrypt) en .env}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    networks:
+      - eyk-net
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
+  web-cliente-crud:
+    build:
+      context: ./web-cliente-crud
+    image: eykcorp/web-cliente-crud:0.1.0
+    ports:
+      - "8080:80"
+    depends_on:
+      ms-cliente-crud:
+        condition: service_healthy
+    networks:
+      - eyk-net
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+
 volumes:
   pgdata:
+  mongodata:
 
 networks:
   eyk-net:

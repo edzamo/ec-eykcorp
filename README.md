@@ -659,6 +659,7 @@ sequenceDiagram
 ```
 
 - **Autenticación:** `POST /auth/login` devuelve un JWT HS256.
+- **Sin caso de uso de negocio:** el login es un mecanismo de seguridad de infraestructura (`infrastructure.security`: `AutenticadorAdministrador` y `JwtService`), no una regla de negocio; crear un puerto solo para comparar un hash sería sobreingeniería. Si el alcance crece (varios usuarios, roles), se promueve a un puerto `CredencialesPort`.
 - **Usuario:** un único administrador definido por variables de entorno, con contraseña en BCrypt. Sin tabla de usuarios por ahora.
 - **Autorización:** todos los endpoints `/clientes/**` requieren token válido.
 - **CORS:** en producción no hace falta, porque Nginx sirve el frontend y la API bajo el mismo origen. En desarrollo local se permite el origen de Vite.
