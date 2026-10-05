@@ -26,8 +26,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?defina MONGO_USER en .env}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?defina MONGO_PASSWORD en .env}
+      MONGO_APP_USER: ${MONGO_APP_USER:?defina MONGO_APP_USER en .env}
+      MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?defina MONGO_APP_PASSWORD en .env}
     volumes:
       - mongodata:/data/db
+      - ./infra/mongo/init-auditoria.js:/docker-entrypoint-initdb.d/init-auditoria.js:ro
     networks:
       - eyk-net
     healthcheck:
@@ -49,7 +52,7 @@ services:
       SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongo:27017/auditoria?authSource=admin&serverSelectionTimeoutMS=2000
+      SPRING_DATA_MONGODB_URI: mongodb://${MONGO_APP_USER}:${MONGO_APP_PASSWORD}@mongo:27017/auditoria?authSource=auditoria&serverSelectionTimeoutMS=2000
       JWT_SECRET: ${JWT_SECRET:?defina JWT_SECRET (>=32 caracteres) en .env}
       JWT_EXPIRATION_MINUTES: ${JWT_EXPIRATION_MINUTES:-30}
       ADMIN_USER: ${ADMIN_USER:?defina ADMIN_USER en .env}
@@ -71,7 +74,7 @@ services:
       context: ./ms-cliente-presentacion
     image: eykcorp/ms-cliente-presentacion:0.1.0
     ports:
-      - "8080:80"
+      - "8080:8080"
     depends_on:
       ms-cliente-gestion:
         condition: service_healthy
