@@ -4,6 +4,7 @@ import com.eykcorp.clientes.application.port.out.ClienteRepositoryPort;
 import com.eykcorp.clientes.domain.cliente.Cliente;
 import com.eykcorp.clientes.domain.cliente.Correo;
 import com.eykcorp.clientes.domain.cliente.CorreoDuplicadoException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Component;
@@ -12,17 +13,13 @@ import reactor.core.publisher.Mono;
 
 /** Adaptador de salida a PostgreSQL (R2DBC). Traduce los errores de infraestructura (INV-09). */
 @Component
+@RequiredArgsConstructor
 public class ClientePersistenceAdapter implements ClienteRepositoryPort {
 
     private static final String RESTRICCION_CORREO = "uk_clientes_correo";
 
     private final ClienteR2dbcRepository repositorio;
     private final ClienteEntityMapper mapper;
-
-    public ClientePersistenceAdapter(ClienteR2dbcRepository repositorio, ClienteEntityMapper mapper) {
-        this.repositorio = repositorio;
-        this.mapper = mapper;
-    }
 
     @Override
     public Mono<Cliente> guardar(Cliente cliente) {

@@ -3,6 +3,7 @@ package com.eykcorp.clientes.infrastructure.adapter.in.web;
 import com.eykcorp.clientes.infrastructure.security.AutenticadorAdministrador;
 import com.eykcorp.clientes.infrastructure.security.JwtService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -12,15 +13,11 @@ import reactor.core.publisher.Mono;
 /** Login del administrador (INV-14: sin caso de uso de negocio; vive en infraestructura). */
 @RestController
 @RequestMapping("/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AutenticadorAdministrador autenticador;
     private final JwtService jwtService;
-
-    public AuthController(AutenticadorAdministrador autenticador, JwtService jwtService) {
-        this.autenticador = autenticador;
-        this.jwtService = jwtService;
-    }
 
     @PostMapping("/login")
     public Mono<LoginResponse> login(@Valid @RequestBody LoginRequest peticion) {
