@@ -2,7 +2,7 @@ name: eykcorp-clientes
 
 services:
   postgres:
-    image: postgres:16.4-alpine
+    image: postgres:16.15-alpine
     environment:
       POSTGRES_DB: ${POSTGRES_DB:?defina POSTGRES_DB en .env}
       POSTGRES_USER: ${POSTGRES_USER:?defina POSTGRES_USER en .env}
@@ -16,6 +16,9 @@ services:
       interval: 5s
       timeout: 3s
       retries: 10
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
 
 volumes:

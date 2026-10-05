@@ -4,6 +4,8 @@ CLAUDE.md
 
 # Entorno y secretos
 .env
+.env.*
+!.env.example
 
 # SO / IDE
 .DS_Store

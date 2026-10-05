@@ -695,7 +695,7 @@ Solo Nginx publica un puerto al host. Backend y bases de datos son accesibles ú
 
 | Servicio | Imagen | Notas |
 |---|---|---|
-| `postgres` | `postgres:16-alpine` | Volumen persistente, `healthcheck` con `pg_isready` |
+| `postgres` | `postgres:16.15-alpine` | Volumen persistente, `healthcheck` con `pg_isready` |
 | `ms-cliente-crud` | Build propio (multi-stage) | Usuario no root, `depends_on: postgres (service_healthy)`, `healthcheck` en actuator |
 | `web-cliente-crud` | Build propio (Node → Nginx) | Sirve la SPA y hace reverse proxy `/api` → `ms-cliente-crud` |
 | `mongo` | `mongo:7` | Volumen persistente, `healthcheck`; el backend lo usa para auditoría (Épica 3) |
