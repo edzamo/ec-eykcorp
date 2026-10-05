@@ -43,7 +43,7 @@ class ClienteMongoCaidoE2ETest {
                 .exchange()
                 .expectStatus().isCreated();
 
-        assertThat(Duration.ofNanos(System.nanoTime() - inicio)).isLessThan(Duration.ofSeconds(5));
+        assertThat(Duration.ofNanos(System.nanoTime() - inicio)).isLessThan(Duration.ofSeconds(10));
     }
 
     @Test

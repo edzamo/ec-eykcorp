@@ -59,4 +59,13 @@ class JwtPropertiesTest {
                 .run(contexto -> assertThat(contexto.getBean(JwtProperties.class).expirationMinutes())
                         .isEqualTo(15));
     }
+
+    @Test
+    void la_expiracion_por_defecto_de_application_yml_debe_ser_15_minutos() {
+        new ApplicationContextRunner().withUserConfiguration(Config.class)
+                .withInitializer(new org.springframework.boot.test.context.ConfigDataApplicationContextInitializer())
+                .withPropertyValues("JWT_SECRET=" + TokensDePrueba.SECRETO)
+                .run(contexto -> assertThat(contexto.getBean(JwtProperties.class).expirationMinutes())
+                        .isEqualTo(15));
+    }
 }

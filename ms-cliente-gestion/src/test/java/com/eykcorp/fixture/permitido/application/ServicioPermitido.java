@@ -2,7 +2,6 @@ package com.eykcorp.fixture.permitido.application;
 
 import com.eykcorp.fixture.permitido.domain.ModeloPermitido;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -14,8 +13,7 @@ public class ServicioPermitido {
         return Mono.zip(Mono.just("a"), Mono.just("b")).map(t -> t.getT1() + t.getT2());
     }
 
-    /** Canario: @Transactional está permitido en application. */
-    @Transactional
+    /** Canario: tipos del dominio y Mono permitidos en application. */
     Mono<ModeloPermitido> escribir() {
         return Mono.just(new ModeloPermitido());
     }

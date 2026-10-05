@@ -45,6 +45,32 @@ class JwtServiceTest {
     }
 
     @Test
+    void el_token_emitido_debe_llevar_la_audiencia_de_la_presentacion() {
+        StepVerifier.create(decodificadorEn(AHORA).decode(servicio.emitir("admin").token()))
+                .assertNext((Jwt jwt) -> assertThat(jwt.getAudience()).containsExactly(TokensDePrueba.AUDIENCIA))
+                .verifyComplete();
+    }
+
+    @Test
+    void debe_rechazar_un_token_sin_audiencia() {
+        StepVerifier.create(decodificadorEn(AHORA).decode(TokensDePrueba.tokenConAudiencia(null, AHORA)))
+                .expectError().verify();
+    }
+
+    @Test
+    void debe_rechazar_un_token_con_audiencia_distinta() {
+        StepVerifier.create(decodificadorEn(AHORA).decode(TokensDePrueba.tokenConAudiencia("otro-servicio", AHORA)))
+                .expectError().verify();
+    }
+
+    @Test
+    void debe_aceptar_un_token_con_la_audiencia_correcta() {
+        StepVerifier.create(decodificadorEn(AHORA)
+                        .decode(TokensDePrueba.tokenConAudiencia(TokensDePrueba.AUDIENCIA, AHORA)))
+                .expectNextCount(1).verifyComplete();
+    }
+
+    @Test
     void debe_rechazar_un_token_expirado_segun_el_reloj() {
         String token = servicio.emitir("admin").token();
 

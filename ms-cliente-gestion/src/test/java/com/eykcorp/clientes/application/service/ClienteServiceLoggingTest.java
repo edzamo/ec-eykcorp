@@ -22,8 +22,12 @@ class ClienteServiceLoggingTest {
     private final ListAppender<ILoggingEvent> appender = new ListAppender<>();
     private final Logger logbackLogger = (Logger) LoggerFactory.getLogger(ClienteService.class.getName());
 
+    private final java.util.logging.Logger raizJul = java.util.logging.Logger.getLogger("");
+    private java.util.logging.Handler[] manejadoresOriginales;
+
     @BeforeEach
     void instalarPuente() {
+        manejadoresOriginales = raizJul.getHandlers();
         SLF4JBridgeHandler.removeHandlersForRootLogger();
         SLF4JBridgeHandler.install();
         appender.start();
@@ -34,6 +38,13 @@ class ClienteServiceLoggingTest {
     void desinstalarPuente() {
         logbackLogger.detachAppender(appender);
         SLF4JBridgeHandler.uninstall();
+        // Restaura el estado JUL global original (el puente se instala solo durante este test)
+        for (java.util.logging.Handler manejador : raizJul.getHandlers()) {
+            raizJul.removeHandler(manejador);
+        }
+        for (java.util.logging.Handler manejador : manejadoresOriginales) {
+            raizJul.addHandler(manejador);
+        }
     }
 
     @Test

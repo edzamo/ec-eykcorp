@@ -22,9 +22,9 @@ public class AuthController {
     @PostMapping("/login")
     public Mono<LoginResponse> login(@Valid @RequestBody LoginRequest peticion) {
         return autenticador.autenticar(peticion.usuario(), peticion.password())
-                .flatMap(valido -> valido
-                        ? Mono.fromSupplier(() -> jwtService.emitir(peticion.usuario()))
-                                .map(t -> new LoginResponse(t.token(), t.expiraEnSegundos()))
-                        : Mono.error(new CredencialesInvalidasException()));
+                .filter(Boolean::booleanValue)
+                .switchIfEmpty(Mono.error(CredencialesInvalidasException::new))
+                .map(valido -> jwtService.emitir(peticion.usuario()))
+                .map(t -> new LoginResponse(t.token(), t.expiraEnSegundos()));
     }
 }

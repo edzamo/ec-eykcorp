@@ -6,7 +6,9 @@ import com.eykcorp.clientes.domain.cliente.ClienteNoEncontradoException;
 import com.eykcorp.clientes.domain.cliente.CorreoDuplicadoException;
 import com.eykcorp.clientes.domain.cliente.ValorInvalidoException;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -43,6 +45,32 @@ class GlobalExceptionHandlerTest {
         ProblemDetail pd = handler.estadoHttp(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         assertThat(pd.getStatus()).isEqualTo(404);
+    }
+
+    @Test
+    void violacion_de_integridad_de_la_restriccion_de_correo_debe_ser_409_sin_filtrar_detalles() {
+        ProblemDetail pd = handler.integridad(new DataIntegrityViolationException(
+                "duplicate key value violates unique constraint \"uk_clientes_correo\" "
+                        + "Detail: Key (correo)=(ana@example.com) already exists"));
+
+        assertThat(pd.getStatus()).isEqualTo(409);
+        assertThat(pd.getTitle()).isEqualTo("Correo duplicado");
+        assertThat(pd.toString()).doesNotContain("ana@example.com").doesNotContain("uk_clientes_correo");
+    }
+
+    @Test
+    void violacion_de_integridad_de_otra_restriccion_debe_ser_500_generico() {
+        ProblemDetail pd = handler.integridad(new DataIntegrityViolationException("null value in column \"nombres\""));
+
+        assertThat(pd.getStatus()).isEqualTo(500);
+        assertThat(pd.toString()).doesNotContain("nombres");
+    }
+
+    @Test
+    void error_de_estado_http_con_codigo_no_estandar_no_debe_lanzar() {
+        ProblemDetail pd = handler.estadoHttp(new ResponseStatusException(HttpStatusCode.valueOf(499)));
+
+        assertThat(pd.getStatus()).isEqualTo(499);
     }
 
     @Test

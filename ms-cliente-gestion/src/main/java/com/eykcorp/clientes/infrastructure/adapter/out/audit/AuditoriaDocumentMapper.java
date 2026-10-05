@@ -11,8 +11,4 @@ class AuditoriaDocumentMapper {
     AuditoriaDocument aDocumento(AccionAuditoria accion, Cliente cliente, Instant momento) {
         return new AuditoriaDocument(null, accion.name(), cliente.id(), momento);
     }
-
-    AccionAuditoria aAccion(AuditoriaDocument documento) {
-        return AccionAuditoria.valueOf(documento.accion());
-    }
 }

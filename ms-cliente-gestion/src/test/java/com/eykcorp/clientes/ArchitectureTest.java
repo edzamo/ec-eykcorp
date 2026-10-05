@@ -10,7 +10,7 @@ import com.tngtech.archunit.lang.ArchRule;
  * {@link ReglasArquitectura} y verificadas con canarios en {@link ReglasArquitecturaTest}.
  *
  * <p>Las reglas no admiten conjuntos vacíos (se retiró {@code allowEmptyShould}).
- * Excepción EXC-1 (pendiente de confirmación): {@code reactor.core..} solo en {@code application}.
+ * Excepción EXC-1 (aplicada por defecto, pendiente de confirmación del usuario): {@code reactor.core..} solo en {@code application}.
  */
 @AnalyzeClasses(
         packages = "com.eykcorp.clientes",

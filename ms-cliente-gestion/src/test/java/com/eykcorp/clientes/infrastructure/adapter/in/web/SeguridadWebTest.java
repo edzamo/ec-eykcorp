@@ -96,6 +96,12 @@ class SeguridadWebTest {
     }
 
     @Test
+    void con_token_sin_audiencia_o_con_audiencia_distinta_debe_responder_401() {
+        esProblema401(getClientes(bearer(TokensDePrueba.tokenConAudiencia(null, Instant.now()))));
+        esProblema401(getClientes(bearer(TokensDePrueba.tokenConAudiencia("otro-servicio", Instant.now()))));
+    }
+
+    @Test
     void con_token_valido_debe_responder_200() {
         listarVacio();
 
@@ -160,5 +166,27 @@ class SeguridadWebTest {
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody().jsonPath("$.errores.usuario").exists().jsonPath("$.errores.password").exists();
+    }
+
+    @Test
+    void login_con_usuario_o_password_de_mas_de_128_caracteres_debe_responder_400() {
+        web.post().uri("/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("usuario", TokensDePrueba.USUARIO, "password", "x".repeat(129)))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errores.password").exists();
+        web.post().uri("/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("usuario", "u".repeat(129), "password", TokensDePrueba.PASSWORD))
+                .exchange()
+                .expectStatus().isBadRequest()
+                .expectBody().jsonPath("$.errores.usuario").exists();
+    }
+
+    @Test
+    void login_con_password_de_exactamente_128_caracteres_no_debe_ser_400() {
+        web.post().uri("/auth/login").contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(Map.of("usuario", TokensDePrueba.USUARIO, "password", "x".repeat(128)))
+                .exchange()
+                .expectStatus().isUnauthorized();
     }
 }

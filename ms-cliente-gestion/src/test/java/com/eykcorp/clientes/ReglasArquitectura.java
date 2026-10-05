@@ -25,8 +25,9 @@ final class ReglasArquitectura {
     private static final int MAX_METODOS_POR_PUERTO = 7;
 
     /**
-     * EXC-1 (pendiente de confirmación del usuario): reactor.core solo en application. Quitar esta
-     * constante si se rechaza. No se abre reactor.util.* completo (solo function, context y retry).
+     * EXC-1 (aplicada por defecto, pendiente de confirmación del usuario): reactor.core solo en
+     * application. Quitar esta constante si se rechaza. EXC-2: sin @Transactional en application
+     * (ningún caso de uso lo usa; la regla lo rechaza). No se abre reactor.util.* completo (solo function, context y retry).
      */
     private static final String REACTOR_EXC_1 = "reactor.core..";
 
@@ -52,8 +53,7 @@ final class ReglasArquitectura {
                                 REACTOR_EXC_1,
                                 "reactor.util.function..",
                                 "reactor.util.context..",
-                                "reactor.util.retry..",
-                                "org.springframework.transaction.annotation..")
+                                "reactor.util.retry..")
                                 .or(equivalentTo(Service.class)));
     }
 
