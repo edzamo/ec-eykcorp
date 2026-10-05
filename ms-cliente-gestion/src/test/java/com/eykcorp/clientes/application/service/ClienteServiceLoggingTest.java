@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
-import com.eykcorp.clientes.application.port.in.DatosCliente;
+import com.eykcorp.clientes.application.command.DatosCliente;
 import com.eykcorp.clientes.application.port.out.FakeAuditoriaPort;
 import com.eykcorp.clientes.application.port.out.InMemoryClienteRepository;
 import java.time.Clock;

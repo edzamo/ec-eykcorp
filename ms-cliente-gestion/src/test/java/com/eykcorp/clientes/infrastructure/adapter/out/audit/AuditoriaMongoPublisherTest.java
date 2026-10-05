@@ -5,7 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import com.eykcorp.clientes.application.port.out.AccionAuditoria;
+import com.eykcorp.clientes.domain.cliente.AccionAuditoria;
 import com.eykcorp.clientes.domain.cliente.Cliente;
 import com.eykcorp.clientes.domain.cliente.Correo;
 import com.eykcorp.clientes.domain.cliente.Telefono;

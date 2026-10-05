@@ -2,11 +2,11 @@ package com.eykcorp.clientes.application.service;
 
 import com.eykcorp.clientes.application.port.in.ActualizarClienteUseCase;
 import com.eykcorp.clientes.application.port.in.CrearClienteUseCase;
-import com.eykcorp.clientes.application.port.in.DatosCliente;
+import com.eykcorp.clientes.application.command.DatosCliente;
 import com.eykcorp.clientes.application.port.in.EliminarClienteUseCase;
 import com.eykcorp.clientes.application.port.in.ListarClientesUseCase;
 import com.eykcorp.clientes.application.port.in.ObtenerClienteUseCase;
-import com.eykcorp.clientes.application.port.out.AccionAuditoria;
+import com.eykcorp.clientes.domain.cliente.AccionAuditoria;
 import com.eykcorp.clientes.application.port.out.AuditoriaPort;
 import com.eykcorp.clientes.application.port.out.ClienteRepositoryPort;
 import com.eykcorp.clientes.domain.cliente.Cliente;

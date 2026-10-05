@@ -5,7 +5,7 @@ import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.response.ClienteRe
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.eykcorp.clientes.application.port.in.DatosCliente;
+import com.eykcorp.clientes.application.command.DatosCliente;
 import com.eykcorp.clientes.domain.cliente.Cliente;
 import com.eykcorp.clientes.domain.cliente.Correo;
 import com.eykcorp.clientes.domain.cliente.Telefono;

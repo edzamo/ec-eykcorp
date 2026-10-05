@@ -1,5 +1,6 @@
 package com.eykcorp.clientes.application.port.out;
 
+import com.eykcorp.clientes.domain.cliente.AccionAuditoria;
 import com.eykcorp.clientes.domain.cliente.Cliente;
 import java.time.Duration;
 import java.util.List;

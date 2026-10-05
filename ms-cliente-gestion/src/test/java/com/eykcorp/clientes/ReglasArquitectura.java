@@ -139,4 +139,12 @@ final class ReglasArquitectura {
                     }
                 });
     }
+
+    /** Los paquetes de puertos solo contienen interfaces (comandos/enums viven en application.command o domain). */
+    static ArchRule losPuertosSoloContienenInterfaces(String base) {
+        return classes()
+                .that().resideInAPackage(base + ".application.port..")
+                .should().beInterfaces()
+                .because("application.port.. solo declara puertos; comandos y enums van en application.command o domain");
+    }
 }
