@@ -1,0 +1,29 @@
+# Herramientas del asistente (no publicar)
+.claude/
+CLAUDE.md
+
+# Entorno y secretos
+.env
+
+# SO / IDE
+.DS_Store
+.idea/
+.vscode/
+
+# Backend (Gradle). El wrapper SÍ se versiona: gradle/wrapper/ y gradlew
+backend/.gradle/
+backend/build/
+backend/out/
+*.class
+*.log
+*.pem
+*.key
+
+# Documentos de la prueba original (material de la empresa)
+*.pdf
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
