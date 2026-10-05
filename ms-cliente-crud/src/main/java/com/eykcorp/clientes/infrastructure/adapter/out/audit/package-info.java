@@ -1,2 +1,2 @@
-/** Adaptador de salida de auditoría (por ahora registra en log sin PII; se sustituirá por MongoDB). */
+/** Adaptador de salida de auditoría: publica eventos mínimos (sin PII) en MongoDB. */
 package com.eykcorp.clientes.infrastructure.adapter.out.audit;
