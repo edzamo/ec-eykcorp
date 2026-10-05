@@ -34,6 +34,8 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
     implementation("org.postgresql:r2dbc-postgresql")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
+    // Swagger UI sirviendo el contrato YAML (contract-first): la generación desde el código está desactivada
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.17")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
     // Flyway migra por JDBC solo al arrancar; el acceso a datos en runtime es R2DBC
@@ -50,6 +52,9 @@ dependencies {
     testImplementation("io.projectreactor:reactor-test")
     testImplementation("org.springframework.security:spring-security-test")
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
+    // Pruebas de conformidad del contrato OpenAPI
+    testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48")
+    testImplementation("com.atlassian.oai:swagger-request-validator-core:2.46.1")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:mongodb")

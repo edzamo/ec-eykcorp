@@ -30,6 +30,20 @@ app:
 
 server:
   port: ${SERVER_PORT:8080}
+  # Detrás de Nginx la UI vive bajo /api: respeta X-Forwarded-Prefix (y demás X-Forwarded-*)
+  forward-headers-strategy: framework
+
+# Contract-first: el YAML estático es la única fuente de verdad. springdoc exige api-docs.enabled=true
+# para montar Swagger UI, pero la UI apunta al YAML (swagger-ui.url) y /v3/api-docs (generado desde el
+# código) NO está permitido en SecurityConfig: queda denegado (401), nunca se publica ni se usa.
+# Solo /v3/api-docs/swagger-config (configuración de la UI) es público.
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    # springdoc antepone X-Forwarded-Prefix (p. ej. /api) en la configuración que sirve a la UI
+    url: /openapi/ms-cliente-gestion.yaml
 
 management:
   endpoints:

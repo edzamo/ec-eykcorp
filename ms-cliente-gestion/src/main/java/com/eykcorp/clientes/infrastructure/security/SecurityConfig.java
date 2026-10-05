@@ -29,8 +29,9 @@ import org.springframework.security.web.server.savedrequest.NoOpServerRequestCac
 
 /**
  * API stateless con bearer JWT (HS256): CSRF deshabilitado, sin sesión, sin httpBasic ni formLogin.
- * Solo {@code POST /auth/login} y {@code GET /actuator/health} son públicos; {@code /clientes/**}
- * exige autenticación y cualquier otra ruta se deniega.
+ * Son públicos {@code POST /auth/login}, {@code GET /actuator/health} y la documentación
+ * (Swagger UI y contrato OpenAPI, solo GET); {@code /clientes/**} exige autenticación y cualquier
+ * otra ruta se deniega.
  */
 @Configuration
 @EnableWebFluxSecurity
@@ -50,6 +51,12 @@ public class SecurityConfig {
                 .authorizeExchange(rutas -> rutas
                         .pathMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .pathMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        // Documentación pública (trade-off asumido): el contrato OpenAPI y Swagger UI se
+                        // sirven sin token para poder consultarlos y obtener el JWT desde la propia UI.
+                        // Solo GET y solo estas rutas (swagger-config es la configuración de la UI; el
+                        // /v3/api-docs generado desde el código sigue denegado); no expone datos ni operaciones.
+                        .pathMatchers(HttpMethod.GET, "/swagger-ui.html", "/swagger-ui/**", "/webjars/**",
+                                "/openapi/**", "/v3/api-docs/swagger-config").permitAll()
                         .pathMatchers("/clientes/**").authenticated()
                         .anyExchange().denyAll())
                 .exceptionHandling(e -> e.authenticationEntryPoint(problemas).accessDeniedHandler(problemas))
