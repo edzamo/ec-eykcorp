@@ -9,5 +9,11 @@ export default defineConfig({
   test: {
     environment: 'jsdom',
     include: ['tests/unit/**/*.test.js'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['text', 'lcov'],
+      include: ['src/**/*.{js,vue}'],
+      exclude: ['src/app/main.js'],
+    },
   },
 })
