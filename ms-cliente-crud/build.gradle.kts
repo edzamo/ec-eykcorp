@@ -24,7 +24,7 @@ dependencies {
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")
-    testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
+    testImplementation("com.tngtech.archunit:archunit-junit5:1.5.1")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
