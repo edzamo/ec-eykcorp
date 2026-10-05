@@ -11,9 +11,9 @@ CLAUDE.md
 .vscode/
 
 # Backend (Gradle). El wrapper SÍ se versiona: gradle/wrapper/ y gradlew
-backend/.gradle/
-backend/build/
-backend/out/
+ms-cliente-crud/.gradle/
+ms-cliente-crud/build/
+ms-cliente-crud/out/
 *.class
 *.log
 *.pem
@@ -23,7 +23,7 @@ backend/out/
 *.pdf
 
 # Frontend
-frontend/node_modules/
-frontend/dist/
-frontend/playwright-report/
-frontend/test-results/
+web-cliente-crud/node_modules/
+web-cliente-crud/dist/
+web-cliente-crud/playwright-report/
+web-cliente-crud/test-results/

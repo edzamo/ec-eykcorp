@@ -152,7 +152,7 @@ sequenceDiagram
     participant N as Nginx
     participant C as ClienteController
     participant S as ClienteService
-    participant R as ClienteR2dbcAdapter
+    participant R as ClientePersistenceAdapter
     participant DB as PostgreSQL
 
     U->>V: Completa el formulario
@@ -240,9 +240,9 @@ flowchart LR
     end
 
     subgraph OUT["Adaptadores de salida (driven)"]
-        REPO["ClienteR2dbcAdapter<br/>PostgreSQL"]
-        MEM["ClienteInMemoryAdapter<br/>solo tests"]
-        AUD["AuditoriaMongoAdapter<br/>MongoDB"]
+        REPO["ClientePersistenceAdapter<br/>PostgreSQL"]
+        MEM["InMemoryClienteRepository<br/>solo tests"]
+        AUD["AuditoriaMongoPublisher<br/>MongoDB"]
     end
 
     CTRL --> PIN
@@ -258,16 +258,15 @@ flowchart LR
 ### 5.3 Estructura de paquetes
 
 ```
-backend/src/main/java/com/eykcorp/clientes/
-├── domain/cliente/                      ← Java puro; solo reactor-core permitido (ADR-010)
+ms-cliente-crud/src/main/java/com/eykcorp/clientes/
+├── domain/cliente/                      ← Java puro, sin librerías externas (ni Reactor)
 │   ├── Cliente, Correo, Telefono
-│   ├── ClienteNoEncontradoException, CorreoDuplicadoException
-│   ├── ClienteRepositoryPort                (puerto de salida)
-│   ├── AuditoriaPort                        (puerto de salida)
-│   └── CrearClienteUseCase, ListarClientesUseCase, ObtenerClienteUseCase,
-│       ActualizarClienteUseCase, EliminarClienteUseCase   (puertos de entrada)
-├── application/
-│   └── ClienteService
+│   └── ClienteNoEncontradoException, CorreoDuplicadoException
+├── application/                         ← solo reactor-core (ADR-010)
+│   ├── port/in/    CrearClienteUseCase, ListarClientesUseCase, ObtenerClienteUseCase,
+│   │               ActualizarClienteUseCase, EliminarClienteUseCase
+│   ├── port/out/   ClienteRepositoryPort, AuditoriaPort
+│   └── service/    ClienteService
 └── infrastructure/
     ├── adapter/in/web/
     │   ├── ClienteController, AuthController
@@ -275,13 +274,13 @@ backend/src/main/java/com/eykcorp/clientes/
     │   ├── mapper/   ClienteWebMapper
     │   └── error/    GlobalExceptionHandler
     ├── adapter/out/persistence/
-    │   ├── ClienteR2dbcAdapter, ClienteEntity, ClienteR2dbcRepository
+    │   ├── ClientePersistenceAdapter, ClienteEntity, ClienteR2dbcRepository
     │   └── mapper/   ClienteEntityMapper
-    ├── adapter/out/audit/   AuditoriaMongoAdapter, AuditoriaDocument   (Épica 3)
+    ├── adapter/out/audit/   AuditoriaMongoPublisher, AuditoriaDocument   (Épica 3)
     ├── security/            JwtService, SecurityConfig                 (Épica 2)
     └── config/              propiedades por variables de entorno
 
-backend/src/test/java/.../   ClienteInMemoryAdapter (doble de prueba) + tests
+ms-cliente-crud/src/test/java/.../   InMemoryClienteRepository (doble de prueba) + tests
 ```
 
 > El dominio se organiza **por agregado** (`domain/cliente`), no por tipo técnico, según la decisión D-03 del kit de arquitectura.
@@ -381,10 +380,10 @@ classDiagram
     ClienteController --> ActualizarClienteUseCase
     ClienteController --> EliminarClienteUseCase
 
-    class ClienteR2dbcAdapter {
+    class ClientePersistenceAdapter {
         <<adapter out>>
     }
-    ClienteR2dbcAdapter ..|> ClienteRepositoryPort
+    ClientePersistenceAdapter ..|> ClienteRepositoryPort
 ```
 
 ### 5.5 Reglas de dominio (invariantes)
@@ -522,7 +521,7 @@ flowchart TB
 ### 6.3 Estructura
 
 ```
-frontend/
+web-cliente-crud/
 ├── src/
 │   ├── domain/         useClientes.js, useAuth.js        (composables de lógica pura)
 │   ├── services/       clienteService.js, httpClient.js  (puerto de salida hacia la API)
@@ -550,7 +549,7 @@ frontend/
 | Patrón | Dónde se aplica | Para qué |
 |---|---|---|
 | **Arquitectura hexagonal** (Ports & Adapters) | Todo el backend | Aislar el dominio de la infraestructura |
-| **Repository** | `ClienteRepositoryPort` + `ClienteR2dbcAdapter` | Abstraer la persistencia |
+| **Repository** | `ClienteRepositoryPort` + `ClientePersistenceAdapter` | Abstraer la persistencia |
 | **Use Case / Command** | Interfaces `*UseCase` y comandos | Una intención de negocio por interfaz |
 | **Adapter** | Controller y adaptador R2DBC | Traducir entre el mundo externo y los puertos |
 | **DTO + Mapper** | `ClienteRequest/Response`, `*Mapper` | No exponer el modelo de dominio |
@@ -697,8 +696,8 @@ Solo Nginx publica un puerto al host. Backend y bases de datos son accesibles ú
 | Servicio | Imagen | Notas |
 |---|---|---|
 | `postgres` | `postgres:16-alpine` | Volumen persistente, `healthcheck` con `pg_isready` |
-| `backend` | Build propio (multi-stage) | Usuario no root, `depends_on: postgres (service_healthy)`, `healthcheck` en actuator |
-| `frontend` | Build propio (Node → Nginx) | Sirve la SPA y hace reverse proxy `/api` → `backend` |
+| `ms-cliente-crud` | Build propio (multi-stage) | Usuario no root, `depends_on: postgres (service_healthy)`, `healthcheck` en actuator |
+| `web-cliente-crud` | Build propio (Node → Nginx) | Sirve la SPA y hace reverse proxy `/api` → `ms-cliente-crud` |
 | `mongo` | `mongo:7` | Volumen persistente, `healthcheck`; el backend lo usa para auditoría (Épica 3) |
 
 ### 10.3 Variables de entorno (`.env.example`)
@@ -721,7 +720,7 @@ Solo Nginx publica un puerto al host. Backend y bases de datos son accesibles ú
 ### 10.4 Configuración de Nginx
 
 - Sirve los archivos estáticos de la SPA con `try_files` hacia `index.html` (rutas del router).
-- `location /api/` hace `proxy_pass` hacia `http://backend:8080/`.
+- `location /api/` hace `proxy_pass` hacia `http://ms-cliente-crud:8080/`.
 - Cabeceras de seguridad básicas y compresión gzip.
 - HTTPS con certificado montado como volumen.
 
@@ -749,7 +748,7 @@ flowchart LR
 | Servicio AWS | Uso en el proyecto | Adaptador (hexagonal) |
 |---|---|---|
 | **Secrets Manager** | El backend lee `JWT_SECRET` y credenciales de BD al arrancar, en vez de variables de entorno planas | Configuración en `infrastructure/config` |
-| **SQS** | La auditoría se publica en una cola y un consumidor la guarda en MongoDB, desacoplando la escritura | `AuditoriaSqsAdapter` (implementa `AuditoriaPort`) |
+| **SQS** | La auditoría se publica en una cola y un consumidor la guarda en MongoDB, desacoplando la escritura | `AuditoriaSqsPublisher` (implementa `AuditoriaPort`) |
 | **S3** | Variante de despliegue del frontend: `aws s3 sync dist/` a un bucket con hosting estático | Script de despliegue, no es código de la app |
 
 - **El dominio no cambia:** AWS entra solo como adaptadores de salida. En producción real basta con quitar `AWS_ENDPOINT_URL`.
@@ -775,7 +774,7 @@ flowchart TB
 |---|---|---|
 | **Unitario** | Dominio (JUnit 5); `ClienteService` con Mockito y `StepVerifier` | Vitest + Vue Test Utils: componentes, composables, `clienteApi` con `fetch` simulado |
 | **Slice** | `@WebFluxTest` + `WebTestClient`: controller y `GlobalExceptionHandler` | Vista montada con MSW como API simulada |
-| **Integración** | Testcontainers + PostgreSQL y MongoDB: adaptadores R2DBC y Mongo, migraciones Flyway. Test de **contrato compartido** que corre contra `ClienteInMemoryAdapter` y contra el adaptador real | — |
+| **Integración** | Testcontainers + PostgreSQL y MongoDB: adaptadores R2DBC y Mongo, migraciones Flyway. Test de **contrato compartido** que corre contra `InMemoryClienteRepository` y contra el adaptador real | — |
 | **Arquitectura** | ArchUnit: el dominio no depende de Spring ni de infraestructura | — |
 | **E2E** | `@SpringBootTest` con puerto real + Testcontainers: CRUD completo, 400, 404, 409, 401 | Playwright contra el stack de Compose: crear, editar, eliminar, error, carga |
 
@@ -793,7 +792,7 @@ Las historias detalladas, con criterios de aceptación, se escriben en `docs/his
 | **E1 · CRUD Clientes** | Dominio y puertos; casos de uso; adaptador R2DBC + Flyway; controller, DTOs y errores; frontend (lista, formulario, eliminar, errores, carga); Nginx + Dockerfiles; tests unitarios, de integración y e2e | Entregable mínimo completo |
 | **E2 · Seguridad JWT** | Login y filtro JWT en backend; login y guard en frontend; tests 401/403 | API protegida |
 | **E3 · Auditoría MongoDB** | `AuditoriaPort` + adaptador Mongo reactivo; servicio `mongo` en Compose; tests de integración y e2e | Segunda persistencia |
-| **E4 · AWS local (LocalStack)** | Servicio LocalStack en Compose (perfil `aws`); scripts de init; lectura de secretos desde Secrets Manager; `AuditoriaSqsAdapter` + consumidor; script de despliegue del frontend a S3; tests de integración contra LocalStack | Stack AWS simulado |
+| **E4 · AWS local (LocalStack)** | Servicio LocalStack en Compose (perfil `aws`); scripts de init; lectura de secretos desde Secrets Manager; `AuditoriaSqsPublisher` + consumidor; script de despliegue del frontend a S3; tests de integración contra LocalStack | Stack AWS simulado |
 | **E5 · Entrega** | READMEs de backend y frontend; ADRs; revisión de seguridad y de código; limpieza del historial | Listo para presentar |
 
 **Trazabilidad requisito → historia → prueba** (se completa en `docs/requerimientos/`):
@@ -824,9 +823,23 @@ ec-eykcorp/
 │   ├── historias/
 │   ├── arquitectura/            ← ADRs
 │   └── pruebas/
-├── backend/                     ← README propio
-└── frontend/                    ← README propio
+├── ms-cliente-crud/             ← backend, README propio
+└── web-cliente-crud/            ← frontend, README propio
 ```
+
+---
+
+### 13.1 Nombres y versionado de componentes
+
+| Tipo | Patrón | Componente | Imagen Docker |
+|---|---|---|---|
+| Microservicio | `ms-<dominio>-<funcionalidad>` | `ms-cliente-crud` | `eykcorp/ms-cliente-crud:0.1.0` |
+| Aplicación web | `web-<dominio>-<funcionalidad>` | `web-cliente-crud` | `eykcorp/web-cliente-crud:0.1.0` |
+
+- **Versionado semántico** (`MAJOR.MINOR.PATCH`) independiente por componente: `version` en `build.gradle.kts` y en `package.json`; la misma versión etiqueta la imagen Docker. Arrancan en `0.1.0` y pasan a `1.0.0` al cerrar la Épica 5.
+- **Versiones fijadas:** Spring Boot, plugins de Gradle, dependencias y imágenes base se declaran con versión exacta (nada de `latest`), para que el build sea reproducible.
+- Los servicios de Compose usan el nombre del componente (`ms-cliente-crud`, `web-cliente-crud`); `postgres`, `mongo` y `localstack` conservan el de su tecnología.
+- El paquete Java raíz sigue siendo `com.eykcorp.clientes`.
 
 ---
 
@@ -843,9 +856,9 @@ docker compose up --build       # levanta postgres, backend y frontend
 **Pruebas**
 
 ```bash
-cd backend  && ./gradlew check  # unitarias, integración, e2e y ArchUnit
-cd frontend && npm test         # Vitest
-cd frontend && npm run e2e      # Playwright (requiere el stack levantado)
+cd ms-cliente-crud  && ./gradlew check  # unitarias, integración, e2e y ArchUnit
+cd web-cliente-crud && npm test         # Vitest
+cd web-cliente-crud && npm run e2e      # Playwright (requiere el stack levantado)
 ```
 
 ---
@@ -863,9 +876,10 @@ cd frontend && npm run e2e      # Playwright (requiere el stack levantado)
 | 007 | JWT con usuario único por entorno | Seguridad básica sin gestión de usuarios | Tabla de usuarios y roles: fuera de alcance |
 | 008 | MongoDB en Docker solo para auditoría | Único caso donde un documento aporta valor real; demuestra un segundo adaptador de salida | Usarlo para clientes: sin justificación |
 | 009 | Documentación y dominio en español; infraestructura en inglés | El contrato define los campos en español | — |
-| 010 | `reactor-core` permitido en puertos, dominio y aplicación (sin Spring) | Los puertos reactivos devuelven `Mono`/`Flux`; el kit no contempla Reactor y se declara aquí como excepción | Puertos síncronos con adaptadores que convierten: pierde el flujo reactivo |
+| 010 | `reactor-core` (solo `reactor.core..`) permitido únicamente en `application`; el dominio queda sin librerías externas | Los puertos reactivos devuelven `Mono`/`Flux`; el kit no contempla Reactor y se declara aquí como excepción | Puertos síncronos con adaptadores que convierten: pierde el flujo reactivo |
 | 011 | Auditoría de mejor esfuerzo | Un fallo de Mongo no debe impedir operar clientes | Auditoría transaccional entre Postgres y Mongo: complejidad excesiva |
 | 014 | LocalStack fijado en 4.4.0 (sin token) para simular AWS | Cualquiera puede clonar y ejecutar sin cuenta; `latest` exige token desde marzo 2026 | `latest` con token: obliga a cada evaluador a registrarse |
 | 015 | Servicios AWS acotados a Secrets Manager, SQS y S3 | Tienen uso real en la app y están disponibles sin licencia; RDS/ECS no | Emular RDS/ECS: requiere plan de pago |
+| 016 | Nombres `ms-<dominio>-<funcionalidad>` / `web-<dominio>-<funcionalidad>` y SemVer por componente | Identifica tipo y propósito de cada artefacto y permite versionarlos por separado | Nombres genéricos `backend`/`frontend` |
 | 013 | Gradle (Kotlin DSL) con toolchain Java 17 | Compila siempre con 17 aunque el JDK local sea otro; builds incrementales | Maven: válido, pero sin toolchain tan directo |
 | 012 | Adaptador en memoria solo para tests | Pruebas rápidas y test de contrato compartido | H2 con R2DBC: no aporta frente a Testcontainers |

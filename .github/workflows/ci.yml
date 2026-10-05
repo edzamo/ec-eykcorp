@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "epic/**"]
+  pull_request:
+
+jobs:
+  ms-cliente-crud:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ms-cliente-crud
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - run: ./gradlew check --console=plain
+
+  web-cliente-crud:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web-cliente-crud
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web-cliente-crud/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

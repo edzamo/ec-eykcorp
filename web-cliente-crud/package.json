@@ -1,0 +1,23 @@
+{
+  "name": "web-cliente-crud",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Aplicación web de gestión (CRUD) de clientes",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "vue": "3.5.43"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "6.0.9",
+    "@vue/test-utils": "2.5.1",
+    "jsdom": "29.1.1",
+    "vite": "8.3.2",
+    "vitest": "5.0.3"
+  }
+}
