@@ -84,6 +84,29 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
+  # AWS simulado en local. Solo arranca con el perfil "aws":
+  #   docker compose --profile aws up -d localstack
+  # Versión fijada SIN token de cuenta (desde marzo 2026 "latest" exige uno). Ver ADR-014.
+  localstack:
+    image: localstack/localstack:4.4.0
+    profiles: ["aws"]
+    environment:
+      SERVICES: s3,sqs,secretsmanager
+      JWT_SECRET: ${JWT_SECRET:-}
+    ports:
+      - "127.0.0.1:4566:4566"
+    volumes:
+      - ./infra/localstack/init/ready.d:/etc/localstack/init/ready.d:ro
+    networks:
+      - eyk-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:4566/_localstack/health | grep -q '\"s3\": \"running\"\\|\"s3\": \"available\"'"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 10s
+    restart: unless-stopped
+
 volumes:
   pgdata:
   mongodata:
