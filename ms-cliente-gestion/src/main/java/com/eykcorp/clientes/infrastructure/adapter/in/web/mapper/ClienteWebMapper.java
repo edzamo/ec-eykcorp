@@ -3,7 +3,7 @@ package com.eykcorp.clientes.infrastructure.adapter.in.web.mapper;
 import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.request.ClienteRequest;
 import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.response.ClienteResponse;
 
-import com.eykcorp.clientes.application.port.in.DatosCliente;
+import com.eykcorp.clientes.application.command.DatosCliente;
 import com.eykcorp.clientes.domain.cliente.Cliente;
 import org.springframework.stereotype.Component;
 

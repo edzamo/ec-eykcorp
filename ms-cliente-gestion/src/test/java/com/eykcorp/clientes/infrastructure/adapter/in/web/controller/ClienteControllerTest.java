@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.eykcorp.clientes.application.port.in.ActualizarClienteUseCase;
 import com.eykcorp.clientes.application.port.in.CrearClienteUseCase;
-import com.eykcorp.clientes.application.port.in.DatosCliente;
+import com.eykcorp.clientes.application.command.DatosCliente;
 import com.eykcorp.clientes.application.port.in.EliminarClienteUseCase;
 import com.eykcorp.clientes.application.port.in.ListarClientesUseCase;
 import com.eykcorp.clientes.application.port.in.ObtenerClienteUseCase;

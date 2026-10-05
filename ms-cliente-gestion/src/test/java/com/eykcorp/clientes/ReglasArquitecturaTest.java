@@ -169,4 +169,17 @@ class ReglasArquitecturaTest {
         String base = FIXTURE + ".permitido";
         debePermitir(ReglasArquitectura.puertosConComoMaximoSieteMetodos(base), importar(base));
     }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"intrusorecord", "intruso" + "enum", "intrusoclase"})
+    void debe_detectar_record_enum_o_clase_en_paquetes_de_puertos(String escenario) {
+        String base = FIXTURE + ".violacion." + escenario;
+        debeDetectar(ReglasArquitectura.losPuertosSoloContienenInterfaces(base), importar(base));
+    }
+
+    @Test
+    void debe_permitir_interfaces_en_paquetes_de_puertos() {
+        String base = FIXTURE + ".permitido";
+        debePermitir(ReglasArquitectura.losPuertosSoloContienenInterfaces(base), importar(base));
+    }
 }

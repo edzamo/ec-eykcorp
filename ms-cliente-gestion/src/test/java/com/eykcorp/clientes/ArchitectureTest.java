@@ -47,4 +47,8 @@ class ArchitectureTest {
     @ArchTest
     static final ArchRule los_modelos_de_infraestructura_no_reutilizan_nombres_de_dominio =
             ReglasArquitectura.modelosDeInfraNoReutilizanNombresDeDominio(BASE);
+
+    @ArchTest
+    static final ArchRule los_paquetes_de_puertos_solo_contienen_interfaces =
+            ReglasArquitectura.losPuertosSoloContienenInterfaces(BASE);
 }
