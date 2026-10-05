@@ -95,6 +95,8 @@ curl -s localhost:8080/api/clientes -H "Authorization: Bearer $TOKEN"
 | DELETE | `/clientes/{id}` | 204 · 404 |
 | GET | `/actuator/health` | 200 `{"status":"UP"}` (sin detalles) |
 
+**Contrato y Swagger:** el contrato OpenAPI (`src/main/resources/static/openapi/ms-cliente-gestion.yaml`) es la fuente de verdad. Con el sistema levantado, Swagger UI está en `http://localhost:8080/api/swagger-ui.html` (la documentación es pública; para probar los endpoints pulsa *Authorize* y pega el token del login).
+
 Los errores usan `ProblemDetail` (RFC 7807). Sin token, `/clientes/**` responde 401.
 
 ## 4. Arquitectura
