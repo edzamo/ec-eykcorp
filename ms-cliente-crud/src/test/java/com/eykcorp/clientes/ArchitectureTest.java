@@ -9,9 +9,8 @@ import com.tngtech.archunit.lang.ArchRule;
  * Reglas de la arquitectura hexagonal (INV-01..03, INV-10, INV-12), definidas en
  * {@link ReglasArquitectura} y verificadas con canarios en {@link ReglasArquitecturaTest}.
  *
- * <p>En E0 los paquetes están vacíos, por lo que estas reglas son vacuosas
- * ({@code allowEmptyShould(true)}). Condición de retiro (criterio de aceptación de E1): quitar
- * {@code allowEmptyShould} de cada regla cuando existan clases en la capa correspondiente.
+ * <p>Las reglas ya no admiten conjuntos vacíos (se retiró {@code allowEmptyShould}); solo la regla de
+ * {@code infrastructure.security} lo mantiene hasta que exista esa capa.
  * Excepción EXC-1 (pendiente de confirmación): {@code reactor.core..} solo en {@code application}.
  */
 @AnalyzeClasses(
@@ -34,4 +33,19 @@ class ArchitectureTest {
 
     @ArchTest
     static final ArchRule sin_ciclos_entre_modulos = ReglasArquitectura.sinCiclosEntreModulos(BASE);
+
+    @ArchTest
+    static final ArchRule sin_llamadas_bloqueantes_de_reactor = ReglasArquitectura.sinLlamadasBloqueantes(BASE);
+
+    @ArchTest
+    static final ArchRule la_seguridad_no_depende_de_adaptadores =
+            ReglasArquitectura.laSeguridadNoDependeDeAdaptadores(BASE);
+
+    @ArchTest
+    static final ArchRule los_puertos_tienen_como_maximo_siete_metodos =
+            ReglasArquitectura.puertosConComoMaximoSieteMetodos(BASE);
+
+    @ArchTest
+    static final ArchRule los_modelos_de_infraestructura_no_reutilizan_nombres_de_dominio =
+            ReglasArquitectura.modelosDeInfraNoReutilizanNombresDeDominio(BASE);
 }
