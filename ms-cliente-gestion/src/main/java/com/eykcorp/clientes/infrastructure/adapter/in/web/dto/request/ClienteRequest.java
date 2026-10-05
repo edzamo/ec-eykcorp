@@ -1,4 +1,4 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.dto.request;
 
 import com.eykcorp.clientes.domain.cliente.Telefono;
 import jakarta.validation.constraints.Email;

@@ -1,4 +1,8 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.controller;
+
+import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.request.LoginRequest;
+import com.eykcorp.clientes.infrastructure.adapter.in.web.dto.response.LoginResponse;
+import com.eykcorp.clientes.infrastructure.adapter.in.web.exception.CredencialesInvalidasException;
 
 import com.eykcorp.clientes.infrastructure.security.AutenticadorAdministrador;
 import com.eykcorp.clientes.infrastructure.security.JwtService;

@@ -1,4 +1,4 @@
-package com.eykcorp.clientes.infrastructure.adapter.in.web;
+package com.eykcorp.clientes.infrastructure.adapter.in.web.dto.response;
 
 /** Token JWT y su vigencia en segundos. */
 public record LoginResponse(String token, long expiraEn) {
