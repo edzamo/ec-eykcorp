@@ -6,11 +6,27 @@ spring:
     url: ${SPRING_R2DBC_URL}
     username: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+  data:
+    mongodb:
+      # Incluye authSource y serverSelectionTimeoutMS (auditoría de mejor esfuerzo, EXC-2)
+      uri: ${SPRING_DATA_MONGODB_URI}
   flyway:
     # Flyway usa JDBC solo al arrancar para migrar
     url: ${SPRING_FLYWAY_URL}
     user: ${POSTGRES_USER}
     password: ${POSTGRES_PASSWORD}
+
+app:
+  security:
+    # Sin valores por defecto con secretos: JWT_SECRET (>= 32 caracteres), ADMIN_USER y
+    # ADMIN_PASSWORD_HASH (BCrypt) son obligatorios; sin ellos la aplicación no arranca.
+    jwt:
+      secret: ${JWT_SECRET}
+      expiration-minutes: ${JWT_EXPIRATION_MINUTES:30}
+      issuer: ms-cliente-crud
+    admin:
+      user: ${ADMIN_USER}
+      password-hash: ${ADMIN_PASSWORD_HASH}
 
 server:
   port: ${SERVER_PORT:8080}
@@ -20,6 +36,10 @@ management:
     web:
       exposure:
         include: health
+  health:
+    # La auditoría es de mejor esfuerzo (EXC-2): Mongo caído no debe marcar el servicio como DOWN
+    mongo:
+      enabled: false
   endpoint:
     health:
       show-details: never
