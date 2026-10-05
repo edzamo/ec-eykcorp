@@ -74,7 +74,7 @@ class SeguridadWebTest {
 
     @Test
     void con_token_expirado_debe_responder_401() {
-        String expirado = TokensDePrueba.servicio(TokensDePrueba.SECRETO, "ms-cliente-crud",
+        String expirado = TokensDePrueba.servicio(TokensDePrueba.SECRETO, "ms-cliente-gestion",
                 Instant.now().minusSeconds(3600)).emitir("admin").token();
 
         esProblema401(getClientes(bearer(expirado)));
@@ -82,7 +82,7 @@ class SeguridadWebTest {
 
     @Test
     void con_token_firmado_con_otra_clave_debe_responder_401() {
-        String falso = TokensDePrueba.servicio(TokensDePrueba.OTRO_SECRETO, "ms-cliente-crud",
+        String falso = TokensDePrueba.servicio(TokensDePrueba.OTRO_SECRETO, "ms-cliente-gestion",
                 Instant.now()).emitir("admin").token();
 
         esProblema401(getClientes(bearer(falso)));

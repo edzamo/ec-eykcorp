@@ -258,7 +258,7 @@ flowchart LR
 ### 5.3 Estructura de paquetes
 
 ```
-ms-cliente-crud/src/main/java/com/eykcorp/clientes/
+ms-cliente-gestion/src/main/java/com/eykcorp/clientes/
 ├── domain/cliente/                      ← Java puro, sin librerías externas (ni Reactor)
 │   ├── Cliente, Correo, Telefono
 │   └── ClienteNoEncontradoException, CorreoDuplicadoException
@@ -280,7 +280,7 @@ ms-cliente-crud/src/main/java/com/eykcorp/clientes/
     ├── security/            JwtService, SecurityConfig                 (Épica 2)
     └── config/              propiedades por variables de entorno
 
-ms-cliente-crud/src/test/java/.../   InMemoryClienteRepository (doble de prueba) + tests
+ms-cliente-gestion/src/test/java/.../   InMemoryClienteRepository (doble de prueba) + tests
 ```
 
 > El dominio se organiza **por agregado** (`domain/cliente`), no por tipo técnico, según la decisión D-03 del kit de arquitectura.
@@ -521,7 +521,7 @@ flowchart TB
 ### 6.3 Estructura
 
 ```
-web-cliente-crud/
+ms-cliente-presentacion/
 ├── src/
 │   ├── domain/         useClientes.js, useAuth.js        (composables de lógica pura)
 │   ├── services/       clienteService.js, httpClient.js  (puerto de salida hacia la API)
@@ -697,8 +697,8 @@ Solo Nginx publica un puerto al host. Backend y bases de datos son accesibles ú
 | Servicio | Imagen | Notas |
 |---|---|---|
 | `postgres` | `postgres:16.15-alpine` | Volumen persistente, `healthcheck` con `pg_isready` |
-| `ms-cliente-crud` | Build propio (multi-stage) | Usuario no root, `depends_on: postgres (service_healthy)`, `healthcheck` en actuator |
-| `web-cliente-crud` | Build propio (Node → Nginx) | Sirve la SPA y hace reverse proxy `/api` → `ms-cliente-crud` |
+| `ms-cliente-gestion` | Build propio (multi-stage) | Usuario no root, `depends_on: postgres (service_healthy)`, `healthcheck` en actuator |
+| `ms-cliente-presentacion` | Build propio (Node → Nginx) | Sirve la SPA y hace reverse proxy `/api` → `ms-cliente-gestion` |
 | `mongo` | `mongo:7` | Volumen persistente, `healthcheck`; el backend lo usa para auditoría (Épica 3) |
 
 ### 10.3 Variables de entorno (`.env.example`)
@@ -721,7 +721,7 @@ Solo Nginx publica un puerto al host. Backend y bases de datos son accesibles ú
 ### 10.4 Configuración de Nginx
 
 - Sirve los archivos estáticos de la SPA con `try_files` hacia `index.html` (rutas del router).
-- `location /api/` hace `proxy_pass` hacia `http://ms-cliente-crud:8080/`.
+- `location /api/` hace `proxy_pass` hacia `http://ms-cliente-gestion:8080/`.
 - Cabeceras de seguridad básicas y compresión gzip.
 - HTTPS con certificado montado como volumen.
 
@@ -824,22 +824,24 @@ ec-eykcorp/
 │   ├── historias/
 │   ├── arquitectura/            ← ADRs
 │   └── pruebas/
-├── ms-cliente-crud/             ← backend, README propio
-└── web-cliente-crud/            ← frontend, README propio
+├── ms-cliente-gestion/             ← backend, README propio
+└── ms-cliente-presentacion/            ← frontend, README propio
 ```
 
 ---
 
 ### 13.1 Nombres y versionado de componentes
 
-| Tipo | Patrón | Componente | Imagen Docker |
+| Rol | Patrón | Componente | Imagen Docker |
 |---|---|---|---|
-| Microservicio | `ms-<dominio>-<funcionalidad>` | `ms-cliente-crud` | `eykcorp/ms-cliente-crud:0.1.0` |
-| Aplicación web | `web-<dominio>-<funcionalidad>` | `web-cliente-crud` | `eykcorp/web-cliente-crud:0.1.0` |
+| Backend (lógica y datos) | `ms-<dominio>-<subdominio>` | `ms-cliente-gestion` | `eykcorp/ms-cliente-gestion:0.1.0` |
+| Frontend (interfaz web) | `ms-<dominio>-<subdominio>` | `ms-cliente-presentacion` | `eykcorp/ms-cliente-presentacion:0.1.0` |
+
+Ambos son microservicios del dominio `cliente`; el subdominio indica qué hace cada uno (*gestión* o *presentación*).
 
 - **Versionado semántico** (`MAJOR.MINOR.PATCH`) independiente por componente: `version` en `build.gradle.kts` y en `package.json`; la misma versión etiqueta la imagen Docker. Arrancan en `0.1.0` y pasan a `1.0.0` al cerrar la Épica 5.
 - **Versiones fijadas:** Spring Boot, plugins de Gradle, dependencias y imágenes base se declaran con versión exacta (nada de `latest`), para que el build sea reproducible.
-- Los servicios de Compose usan el nombre del componente (`ms-cliente-crud`, `web-cliente-crud`); `postgres`, `mongo` y `localstack` conservan el de su tecnología.
+- Los servicios de Compose usan el nombre del componente (`ms-cliente-gestion`, `ms-cliente-presentacion`); `postgres`, `mongo` y `localstack` conservan el de su tecnología.
 - El paquete Java raíz sigue siendo `com.eykcorp.clientes`.
 
 ---
@@ -857,9 +859,9 @@ docker compose up --build       # levanta postgres, backend y frontend
 **Pruebas**
 
 ```bash
-cd ms-cliente-crud  && ./gradlew check  # unitarias, integración, e2e y ArchUnit
-cd web-cliente-crud && npm test         # Vitest
-cd web-cliente-crud && npm run e2e      # Playwright (requiere el stack levantado)
+cd ms-cliente-gestion  && ./gradlew check  # unitarias, integración, e2e y ArchUnit
+cd ms-cliente-presentacion && npm test         # Vitest
+cd ms-cliente-presentacion && npm run e2e      # Playwright (requiere el stack levantado)
 ```
 
 ---
@@ -881,6 +883,6 @@ cd web-cliente-crud && npm run e2e      # Playwright (requiere el stack levantad
 | 011 | Auditoría de mejor esfuerzo | Un fallo de Mongo no debe impedir operar clientes | Auditoría transaccional entre Postgres y Mongo: complejidad excesiva |
 | 014 | LocalStack fijado en 4.4.0 (sin token) para simular AWS | Cualquiera puede clonar y ejecutar sin cuenta; `latest` exige token desde marzo 2026 | `latest` con token: obliga a cada evaluador a registrarse |
 | 015 | Servicios AWS acotados a Secrets Manager, SQS y S3 | Tienen uso real en la app y están disponibles sin licencia; RDS/ECS no | Emular RDS/ECS: requiere plan de pago |
-| 016 | Nombres `ms-<dominio>-<funcionalidad>` / `web-<dominio>-<funcionalidad>` y SemVer por componente | Identifica tipo y propósito de cada artefacto y permite versionarlos por separado | Nombres genéricos `backend`/`frontend` |
+| 016 | Nombres `ms-<dominio>-<subdominio>` para backend y frontend (`ms-cliente-gestion`, `ms-cliente-presentacion`) y SemVer por componente | Un único estándar profesional que identifica dominio y propósito; el subdominio evita nombres técnicos como `crud` | Nombres genéricos `backend`/`frontend` o con `crud` |
 | 013 | Gradle (Kotlin DSL) con toolchain Java 17 | Compila siempre con 17 aunque el JDK local sea otro; builds incrementales | Maven: válido, pero sin toolchain tan directo |
 | 012 | Adaptador en memoria solo para tests | Pruebas rápidas y test de contrato compartido | H2 con R2DBC: no aporta frente a Testcontainers |

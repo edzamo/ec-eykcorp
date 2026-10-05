@@ -28,7 +28,7 @@ public final class TokensDePrueba {
 
     /** Token vigente (emitido con el reloj real) para llamar a la API desde las pruebas. */
     public static String tokenVigente() {
-        return new JwtService(propiedades(SECRETO, "ms-cliente-crud"), Clock.systemUTC())
+        return new JwtService(propiedades(SECRETO, "ms-cliente-gestion"), Clock.systemUTC())
                 .emitir(USUARIO).token();
     }
 }

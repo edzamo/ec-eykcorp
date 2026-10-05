@@ -40,10 +40,10 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
-  ms-cliente-crud:
+  ms-cliente-gestion:
     build:
-      context: ./ms-cliente-crud
-    image: eykcorp/ms-cliente-crud:0.1.0
+      context: ./ms-cliente-gestion
+    image: eykcorp/ms-cliente-gestion:0.1.0
     environment:
       SPRING_R2DBC_URL: r2dbc:postgresql://postgres:5432/${POSTGRES_DB}
       SPRING_FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
@@ -66,14 +66,14 @@ services:
       - no-new-privileges:true
     restart: unless-stopped
 
-  web-cliente-crud:
+  ms-cliente-presentacion:
     build:
-      context: ./web-cliente-crud
-    image: eykcorp/web-cliente-crud:0.1.0
+      context: ./ms-cliente-presentacion
+    image: eykcorp/ms-cliente-presentacion:0.1.0
     ports:
       - "8080:80"
     depends_on:
-      ms-cliente-crud:
+      ms-cliente-gestion:
         condition: service_healthy
     networks:
       - eyk-net

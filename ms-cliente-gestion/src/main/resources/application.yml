@@ -1,6 +1,6 @@
 spring:
   application:
-    name: ms-cliente-crud
+    name: ms-cliente-gestion
   # Sin valores por defecto con credenciales: se inyectan por variables de entorno (.env / compose)
   r2dbc:
     url: ${SPRING_R2DBC_URL}
@@ -23,7 +23,7 @@ app:
     jwt:
       secret: ${JWT_SECRET}
       expiration-minutes: ${JWT_EXPIRATION_MINUTES:30}
-      issuer: ms-cliente-crud
+      issuer: ms-cliente-gestion
     admin:
       user: ${ADMIN_USER}
       password-hash: ${ADMIN_PASSWORD_HASH}

@@ -4,10 +4,10 @@ updates:
     directory: /
     schedule: { interval: weekly }
   - package-ecosystem: gradle
-    directory: /ms-cliente-crud
+    directory: /ms-cliente-gestion
     schedule: { interval: weekly }
   - package-ecosystem: npm
-    directory: /web-cliente-crud
+    directory: /ms-cliente-presentacion
     schedule: { interval: weekly }
   - package-ecosystem: docker
     directory: /
