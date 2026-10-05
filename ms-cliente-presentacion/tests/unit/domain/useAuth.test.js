@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest'
+import * as authModule from '../../../src/domain/useAuth.js'
 import { createAuth } from '../../../src/domain/useAuth.js'
 
 const memStorage = (init = {}) => {
@@ -15,6 +16,10 @@ const memStorage = (init = {}) => {
 }
 
 describe('useAuth', () => {
+  it('debe_exportar_solo_createAuth_sin_alias_useAuth', () => {
+    expect(Object.keys(authModule)).toEqual(['createAuth'])
+  })
+
   it('debe_estar_no_autenticado_sin_token', () => {
     const auth = createAuth({ authService: {}, storage: memStorage() })
     expect(auth.estaAutenticado.value).toBe(false)

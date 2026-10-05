@@ -1,5 +1,6 @@
 <script setup>
 import { computed, inject, onMounted, ref } from 'vue'
+import { CLIENTE_SERVICE_KEY } from '../app/keys.js'
 import { useClientes } from '../domain/useClientes.js'
 import ClienteTable from '../components/ClienteTable.vue'
 import ClienteForm from '../components/ClienteForm.vue'
@@ -8,7 +9,7 @@ import LoadingSpinner from '../components/LoadingSpinner.vue'
 import ErrorAlert from '../components/ErrorAlert.vue'
 
 const { clientes, cargando, error, cargar, crear, actualizar, eliminar } = useClientes(
-  inject('clienteService'),
+  inject(CLIENTE_SERVICE_KEY),
 )
 
 const formularioAbierto = ref(false)

@@ -2,19 +2,19 @@
 
 Interfaz web de **gestión de clientes**: inicio de sesión, listado, alta, edición y baja de clientes, con estados de carga y mensajes de error. Consume la API de [`ms-cliente-gestion`](../ms-cliente-gestion/README.md).
 
-| | |
-|---|---|
-| Versión | `0.1.0` (la misma versión etiqueta la imagen `eykcorp/ms-cliente-presentacion:0.1.0`) |
-| Tecnología | Vue 3.5 (Composition API), Vite, JavaScript, Vue Router, Bootstrap 5 (solo CSS) |
-| Servidor | Nginx: sirve la SPA y reenvía `/api/*` al backend |
-| Pruebas | Vitest, Vue Test Utils, MSW; calidad con ESLint y Prettier |
+|            |                                                                                       |
+| ---------- | ------------------------------------------------------------------------------------- |
+| Versión    | `0.1.0` (la misma versión etiqueta la imagen `eykcorp/ms-cliente-presentacion:0.1.0`) |
+| Tecnología | Vue 3.5 (Composition API), Vite, JavaScript, Vue Router, Bootstrap 5 (solo CSS)       |
+| Servidor   | Nginx: sirve la SPA y reenvía `/api/*` al backend                                     |
+| Pruebas    | Vitest, Vue Test Utils, MSW; calidad con ESLint y Prettier                            |
 
 ## 1. Qué necesitas para levantarlo
 
-| Requisito | Para qué | Versión |
-|---|---|---|
-| Docker y Docker Compose v2 | Levantar todo el sistema | Docker 20.10+ |
-| Node.js y npm | Solo para desarrollo, pruebas y build fuera de Docker | Node 22 (ver `.nvmrc`) |
+| Requisito                  | Para qué                                              | Versión                |
+| -------------------------- | ----------------------------------------------------- | ---------------------- |
+| Docker y Docker Compose v2 | Levantar todo el sistema                              | Docker 20.10+          |
+| Node.js y npm              | Solo para desarrollo, pruebas y build fuera de Docker | Node 22 (ver `.nvmrc`) |
 
 ## 2. Cómo levantarlo
 
@@ -86,18 +86,18 @@ Decisiones a conocer:
 
 ## 4. Scripts
 
-| Comando | Qué hace |
-|---|---|
-| `npm run dev` | Servidor de desarrollo con proxy a la API |
-| `npm test` | Pruebas unitarias y de integración (Vitest + MSW) |
-| `npm run test:coverage` | Pruebas con reporte de cobertura (`coverage/`) |
-| `npm run lint` | ESLint |
-| `npm run format:check` | Prettier (comprobación) |
-| `npm run build` | Compilación de producción en `dist/` |
+| Comando                 | Qué hace                                          |
+| ----------------------- | ------------------------------------------------- |
+| `npm run dev`           | Servidor de desarrollo con proxy a la API         |
+| `npm test`              | Pruebas unitarias y de integración (Vitest + MSW) |
+| `npm run test:coverage` | Pruebas con reporte de cobertura (`coverage/`)    |
+| `npm run lint`          | ESLint                                            |
+| `npm run format:check`  | Prettier (comprobación)                           |
+| `npm run build`         | Compilación de producción en `dist/`              |
 
 ## 5. Imagen Docker
 
-El `Dockerfile` usa dos etapas: Node compila la SPA y la imagen final es Nginx con los archivos ya generados. `nginx.conf` define el *fallback* de la SPA (`try_files`), el proxy `/api/` → `http://ms-cliente-gestion:8080/`, compresión y cabeceras de seguridad.
+El `Dockerfile` usa dos etapas: Node compila la SPA y la imagen final es Nginx con los archivos ya generados. `nginx.conf` define el _fallback_ de la SPA (`try_files`), el proxy `/api/` → `http://ms-cliente-gestion:8080/`, compresión y cabeceras de seguridad.
 
 ```bash
 docker build -t eykcorp/ms-cliente-presentacion:0.1.0 .

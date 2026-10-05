@@ -23,5 +23,3 @@ export function createAuth({ authService, storage = globalThis.sessionStorage })
     logout,
   }
 }
-
-export const useAuth = createAuth
