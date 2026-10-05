@@ -840,8 +840,8 @@ flowchart LR
 | Servicio `localstack` (4.4.0, sin token) en el Compose, perfil `aws` | Hecho y probado |
 | Aprovisionamiento automático: bucket S3, cola SQS `auditoria-clientes`, secreto en Secrets Manager (`infra/localstack/init/ready.d/`) | Hecho y probado |
 | Despliegue de la SPA a S3 simulado (`scripts/aws-local-deploy-frontend.sh`) | Hecho y probado: el sitio se sirve en `http://localhost:4566/eykcorp-clientes-web/index.html` |
-| Backend leyendo el secreto desde Secrets Manager | Siguiente paso (hoy los secretos llegan por variables de entorno) |
-| `AuditoriaSqsPublisher` (auditoría por SQS) | Siguiente paso (hoy la auditoría va directo a MongoDB) |
+| Backend leyendo el secreto desde Secrets Manager | Opcional: hoy los secretos llegan por variables de entorno |
+| Auditoría por SQS | Opcional: hoy la auditoría va directo a MongoDB |
 
 Cómo usarlo:
 
@@ -897,7 +897,7 @@ Regla de trabajo: **TDD**. Cada historia empieza con un test que falla (RED), se
 | E4 AWS | Hecha **en local con LocalStack** | S3, SQS y Secrets Manager simulados; la SPA se despliega a un bucket S3 simulado |
 | E5 Entrega | Hecha | READMEs, revisiones de calidad y seguridad, y contrato OpenAPI |
 
-**Sobre AWS:** una cuenta real de AWS exige tarjeta de crédito, así que se decidió **no usarla** y simular el entorno con [LocalStack](https://www.localstack.cloud/), que ofrece los mismos servicios en local y sin costo. Con `docker compose --profile aws up -d localstack` se crean el bucket, la cola y el secreto, y `scripts/aws-local-deploy-frontend.sh` sube la aplicación al bucket simulado. Pasar a AWS real solo requeriría cambiar el endpoint y las credenciales. El backend hoy lee sus secretos de variables de entorno y audita directamente en MongoDB; conectarlo a Secrets Manager y SQS sería el siguiente paso natural.
+**Sobre AWS:** una cuenta real de AWS exige tarjeta de crédito, así que no se contrata. En su lugar el entorno queda listo para simularse en local con [LocalStack](https://www.localstack.cloud/), que ofrece los mismos servicios sin costo y sin cuenta. Quien quiera probarlo puede hacerlo con `docker compose --profile aws up -d localstack`, que crea el bucket S3, la cola SQS y el secreto, y con `scripts/aws-local-deploy-frontend.sh`, que sube la aplicación al bucket simulado. La aplicación funciona igual sin LocalStack: sus secretos llegan por variables de entorno y la auditoría va directo a MongoDB.
 
 **Verificación (v0.2.0):** backend 254 tests (JUnit, ArchUnit, Testcontainers con PostgreSQL y MongoDB reales, conformidad con el contrato OpenAPI; ~95 % de líneas), frontend 106 tests (Vitest y MSW; 100 % de líneas), CI en verde y `scripts/smoke-test.sh` contra el sistema completo levantado con `docker compose up` (14 comprobaciones: SPA, proxy, 401, login, CRUD, 400, 404 y 409).
 
@@ -909,7 +909,6 @@ Regla de trabajo: **TDD**. Cada historia empieza con un test que falla (RED), se
 - Pruebas de navegador (Playwright): hoy la interfaz se prueba con Vitest y MSW, y el sistema completo con el script de humo.
 - Análisis automático de vulnerabilidades de Gradle y SonarQube en el CI (Dependabot ya está activo).
 - Límite de intentos de login también en la aplicación (hoy lo aplica Nginx: 5 por minuto por IP).
-- Conectar el backend a Secrets Manager y SQS (ver "Sobre AWS").
 
 Las excepciones deliberadas a las reglas de diseño (Reactor en `application`, auditoría sin transacción compartida con PostgreSQL y login sin caso de uso) están explicadas en [`docs/arquitectura/decisiones.md`](docs/arquitectura/decisiones.md).
 
