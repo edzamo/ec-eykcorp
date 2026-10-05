@@ -128,7 +128,7 @@ Decisiones propias que van más allá del enunciado original:
 
 ```mermaid
 flowchart LR
-    U([Usuario]) -->|HTTPS| N
+    U([Usuario]) -->|HTTP :8080| N
 
     subgraph Docker Compose
         N["Nginx<br/>frontend estático + reverse proxy"]
@@ -223,7 +223,6 @@ Toda la cadena es **no bloqueante**: ningún hilo del event loop espera a la BD.
 flowchart LR
     subgraph IN["Adaptadores de entrada (driving)"]
         CTRL["ClienteController<br/>REST + DTOs"]
-        AUTH["AuthController<br/>login JWT"]
     end
 
     subgraph CORE["Núcleo"]
@@ -246,7 +245,6 @@ flowchart LR
     end
 
     CTRL --> PIN
-    AUTH --> PIN
     PIN --> UC
     UC --> ENT
     UC --> POUT
@@ -259,41 +257,44 @@ flowchart LR
 
 ```
 ms-cliente-gestion/src/main/java/com/eykcorp/clientes/
-├── domain/cliente/                      ← Java puro, sin librerías externas (ni Reactor)
-│   ├── Cliente, Correo, Telefono
-│   └── ClienteNoEncontradoException, CorreoDuplicadoException
-├── application/                         ← solo reactor-core (ADR-010)
+├── domain/cliente/                 Java puro, sin librerías externas (ni Reactor)
+│   ├── Cliente, Correo, Telefono, AccionAuditoria
+│   └── DomainException, ValorInvalidoException,
+│       ClienteNoEncontradoException, CorreoDuplicadoException
+├── application/
+│   ├── command/    DatosCliente
 │   ├── port/in/    CrearClienteUseCase, ListarClientesUseCase, ObtenerClienteUseCase,
-│   │               ActualizarClienteUseCase, EliminarClienteUseCase
-│   ├── port/out/   ClienteRepositoryPort, AuditoriaPort
+│   │               ActualizarClienteUseCase, EliminarClienteUseCase      (solo interfaces)
+│   ├── port/out/   ClienteRepositoryPort, AuditoriaPort                   (solo interfaces)
 │   └── service/    ClienteService
 └── infrastructure/
     ├── adapter/in/web/
-    │   ├── ClienteController, AuthController
-    │   ├── dto/      ClienteRequest, ClienteResponse
-    │   ├── mapper/   ClienteWebMapper
-    │   └── error/    GlobalExceptionHandler
-    ├── adapter/out/persistence/
-    │   ├── ClientePersistenceAdapter, ClienteEntity, ClienteR2dbcRepository
-    │   └── mapper/   ClienteEntityMapper
-    ├── adapter/out/audit/   AuditoriaMongoPublisher, AuditoriaDocument   (Épica 3)
-    ├── security/            JwtService, SecurityConfig                 (Épica 2)
-    └── config/              propiedades por variables de entorno
+    │   ├── controller/   ClienteController, AuthController
+    │   ├── dto/request/  ClienteRequest, LoginRequest
+    │   ├── dto/response/ ClienteResponse, LoginResponse
+    │   ├── mapper/       ClienteWebMapper
+    │   └── exception/    GlobalExceptionHandler, CredencialesInvalidasException
+    ├── adapter/out/persistence/  ClientePersistenceAdapter, ClienteEntity,
+    │                             ClienteR2dbcRepository, ClienteEntityMapper
+    ├── adapter/out/audit/        AuditoriaMongoPublisher, AuditoriaDocument, AuditoriaDocumentMapper
+    └── security/                 SecurityConfig, JwtService, JwtProperties, AdminProperties,
+                                  AutenticadorAdministrador, ProblemaSeguridadHandler, TokenEmitido
 
-ms-cliente-gestion/src/test/java/.../   InMemoryClienteRepository (doble de prueba) + tests
+ms-cliente-gestion/src/test/java/...  dobles en memoria (InMemoryClienteRepository, FakeAuditoriaPort),
+                                      contratos compartidos y pruebas de arquitectura
 ```
 
-> El dominio se organiza **por agregado** (`domain/cliente`), no por tipo técnico, según la decisión D-03 del kit de arquitectura.
+> El dominio se organiza **por agregado** (`domain/cliente`), no por tipo técnico. Esta estructura corresponde al estado tras fusionar `refactor/organizacion-paquetes-web` y `refactor/puertos-solo-interfaces`.
 
 **Equivalencia con arquitectura "por capas"** (requisito del enunciado):
 
 | Capa clásica | Paquete hexagonal |
 |---|---|
-| Controller | `infrastructure.adapter.in.web` |
+| Controller | `infrastructure.adapter.in.web.controller` |
 | Service | `application.service` |
 | Repository | `infrastructure.adapter.out.persistence` |
 | Modelo / Entity | `domain.cliente` |
-| DTO | `infrastructure.adapter.in.web.dto` |
+| DTO | `infrastructure.adapter.in.web.dto` (`request` y `response`) |
 
 ### 5.4 Diagrama de clases
 
@@ -326,7 +327,7 @@ classDiagram
 
     class CrearClienteUseCase {
         <<interface>>
-        +crear(CrearClienteCommand) Mono~Cliente~
+        +crear(DatosCliente) Mono~Cliente~
     }
     class ListarClientesUseCase {
         <<interface>>
@@ -338,7 +339,7 @@ classDiagram
     }
     class ActualizarClienteUseCase {
         <<interface>>
-        +actualizar(Long, ActualizarClienteCommand) Mono~Cliente~
+        +actualizar(Long, DatosCliente) Mono~Cliente~
     }
     class EliminarClienteUseCase {
         <<interface>>
@@ -352,6 +353,7 @@ classDiagram
         +buscarTodos() Flux~Cliente~
         +eliminarPorId(Long) Mono~Void~
         +existePorCorreo(Correo) Mono~Boolean~
+        +existePorCorreoDeOtro(Correo, Long) Mono~Boolean~
     }
 
     class AuditoriaPort {
@@ -395,18 +397,23 @@ classDiagram
 
 ### 5.6 Manejo global de errores
 
-Un `@RestControllerAdvice` convierte excepciones de dominio y de validación a `ProblemDetail` (RFC 7807):
+`GlobalExceptionHandler` (`@RestControllerAdvice`) convierte excepciones a `ProblemDetail` (RFC 7807). Los 401 y 403 de Spring Security los traduce `ProblemaSeguridadHandler` con el mismo formato.
 
 | Excepción | HTTP |
 |---|---|
-| `WebExchangeBindException` (validación del DTO) | 400 |
+| `WebExchangeBindException` (validación del DTO, con `errores` por campo) | 400 |
+| `ValorInvalidoException` (correo o teléfono con formato inválido) | 400 |
+| `CredencialesInvalidasException` (login) | 401 |
+| Sin token o token inválido/expirado (Spring Security) | 401 |
+| Token válido sin permiso para la ruta | 403 |
 | `ClienteNoEncontradoException` | 404 |
-| `CorreoDuplicadoException` | 409 |
+| `CorreoDuplicadoException`, y `DataIntegrityViolationException` por la restricción `uk_clientes_correo` (alta concurrente) | 409 |
+| `ResponseStatusException` (JSON mal formado, id no numérico, ruta inexistente) | conserva su estado (400/404…) |
 | Error no controlado | 500 (sin filtrar detalles internos; se registra en logs) |
 
 ### 5.7 Logs
 
-SLF4J con nivel configurable por variable de entorno. Se registran los casos de uso (crear, actualizar, eliminar) en `INFO`, y los errores inesperados en `ERROR`. Nunca se registran tokens ni datos sensibles.
+SLF4J (con la anotación `@Slf4j` de Lombok) y nivel configurable por variable de entorno (`LOG_LEVEL` para la raíz, `APP_LOG_LEVEL` para el paquete de la aplicación). Los servicios y controllers registran cada operación: `INFO` para los cambios ("Cliente creado id=…"), `DEBUG` para el detalle de cada caso de uso, `WARN` para fallos tolerados (auditoría no registrada, login fallido) y `ERROR` para lo inesperado. **Nunca** se registran datos personales, contraseñas ni tokens: solo ids y acciones, y hay pruebas que lo comprueban.
 
 ### 5.8 Diagramas de comportamiento
 
@@ -481,7 +488,7 @@ Si la auditoría falla, el cambio sobre el cliente **no se revierte**: el error 
 - **Componentes presentacionales** (sin lógica de negocio ni llamadas HTTP) y **vistas contenedoras**.
 - La lógica de estado (lista, carga, error) vive en **composables**.
 - Un **único punto de acceso HTTP** (`services/clienteService`) para facilitar pruebas y cambios.
-- Sigue las reglas FE-01..08 del kit (`frontend-component`): presentacionales sin `fetch`, estado global solo si es compartido y props con validación de tipos.
+- Reglas de diseño del frontend: presentacionales sin `fetch`, estado global solo si es compartido y props con validación de tipos.
 
 ### 6.2 Capas del frontend
 
@@ -593,6 +600,8 @@ La tabla se crea con una migración Flyway versionada (`V1__crear_tabla_clientes
 | PUT | `/clientes/{id}` | `ClienteRequest` | `200` | 400, 404, 409 |
 | DELETE | `/clientes/{id}` | — | `204` | 404 |
 
+> Todos los endpoints excepto `POST /auth/login` y `GET /actuator/health` exigen `Authorization: Bearer <token>` y responden **401** sin él. Detrás de Nginx la API se consume con el prefijo `/api` (por ejemplo `POST /api/clientes`); directo al microservicio no lleva prefijo.
+
 **ClienteRequest**
 
 ```json
@@ -683,7 +692,7 @@ flowchart TB
         end
     end
 
-    USER([Navegador]) -->|"8080 → 80"| NGX
+    USER([Navegador]) -->|"8080 → 8080"| NGX
     NGX -->|"/api"| BCK
     BCK --> PG
     BCK --> MG
@@ -706,14 +715,16 @@ Solo Nginx publica un puerto al host. Backend y bases de datos son accesibles ú
 |---|---|---|
 | `POSTGRES_DB` | `clientes` | postgres, backend |
 | `POSTGRES_USER` | `clientes_app` | postgres, backend |
-| `POSTGRES_PASSWORD` | `cambiar-esto` | postgres, backend |
+| `POSTGRES_PASSWORD` | *(aleatoria, la genera `scripts/init-env.sh`)* | postgres, backend |
 | `SPRING_R2DBC_URL` | `r2dbc:postgresql://postgres:5432/clientes` | backend |
 | `SPRING_FLYWAY_URL` | `jdbc:postgresql://postgres:5432/clientes` | backend |
-| `SPRING_DATA_MONGODB_URI` | `mongodb://mongo:27017/auditoria` | backend |
+| `MONGO_USER` / `MONGO_PASSWORD` | `mongo_root` / *(aleatoria)* | mongo (usuario root; el backend no lo usa) |
+| `MONGO_APP_USER` / `MONGO_APP_PASSWORD` | `auditoria_app` / *(aleatoria)* | mongo y backend (permiso `readWrite` solo sobre `auditoria`) |
+| `SPRING_DATA_MONGODB_URI` | `mongodb://<usuario>:<clave>@mongo:27017/auditoria?authSource=auditoria&serverSelectionTimeoutMS=2000` | backend (la arma el Compose) |
 | `LOG_LEVEL` | `INFO` | backend |
 | `JWT_SECRET` | *(mínimo 32 caracteres)* | backend |
-| `JWT_EXPIRATION_MINUTES` | `30` | backend |
-| `ADMIN_USER` / `ADMIN_PASSWORD_HASH` | | backend |
+| `JWT_EXPIRATION_MINUTES` | `15` | backend |
+| `ADMIN_USER` / `ADMIN_PASSWORD_HASH` | `admin` / *(hash BCrypt)* | backend |
 | `AWS_ENDPOINT_URL` | `http://localstack:4566` | backend (solo perfil `aws`) |
 | `AWS_REGION` / `AWS_ACCESS_KEY_ID` / `AWS_SECRET_ACCESS_KEY` | `us-east-1` / `test` / `test` | backend y LocalStack (credenciales ficticias) |
 
@@ -774,7 +785,7 @@ docker compose --profile aws down                  # lo apaga
 - **Aprovisionamiento:** scripts Bash con `awslocal` en `localstack/init/ready.d/`, que crean el secreto, la cola y el bucket al iniciar el contenedor.
 - **Limitación conocida:** RDS y ECS/Fargate no se emulan en la versión gratuita estable. PostgreSQL y los contenedores siguen corriendo en Docker Compose.
 - **Versión y licencia:** desde el 23 de marzo de 2026 la imagen `localstack/localstack:latest` exige un token de cuenta. Para que cualquier evaluador pueda ejecutar el repo sin registrarse, se **fija la versión sin token** (`localstack/localstack:4.4.0`). Ver ADR-014.
-- **CI:** el workflow de GitHub Actions levanta LocalStack como servicio y ejecuta los tests de integración del perfil `aws`.
+- **CI:** el workflow de GitHub Actions tiene hoy tres jobs (backend, frontend y construcción de las imágenes). Probar LocalStack en CI queda pendiente junto con los adaptadores de AWS.
 
 ---
 
@@ -790,7 +801,7 @@ flowchart TB
 
 | Nivel | Backend | Frontend |
 |---|---|---|
-| **Unitario** | Dominio (JUnit 5); `ClienteService` con Mockito y `StepVerifier` | Vitest + Vue Test Utils: componentes, composables, `clienteApi` con `fetch` simulado |
+| **Unitario** | Dominio (JUnit 5); `ClienteService` con `StepVerifier` y dobles en memoria | Vitest + Vue Test Utils: componentes, composables, `clienteService` con `fetch` simulado |
 | **Slice** | `@WebFluxTest` + `WebTestClient`: controller y `GlobalExceptionHandler` | Vista montada con MSW como API simulada |
 | **Integración** | Testcontainers + PostgreSQL y MongoDB: adaptadores R2DBC y Mongo, migraciones Flyway. Test de **contrato compartido** que corre contra `InMemoryClienteRepository` y contra el adaptador real | — |
 | **Arquitectura** | ArchUnit: el dominio no depende de Spring ni de infraestructura | — |
@@ -854,18 +865,24 @@ Regla de trabajo: **TDD**. Cada historia empieza con un test que falla (RED), se
 
 ```
 ec-eykcorp/
-├── README.md                    ← este documento
-├── docker-compose.yml
-├── .env.example
+├── README.md                         este documento
+├── docker-compose.yml                sistema completo (+ docker-compose.dev.yml para desarrollo)
+├── .env.example                      plantilla; el .env real lo genera scripts/init-env.sh (no se versiona)
 ├── .gitignore
-├── .github/workflows/ci.yml
+├── .github/
+│   ├── workflows/ci.yml              CI: backend, frontend e imágenes Docker
+│   └── dependabot.yml
 ├── docs/
-│   ├── requerimientos/
-│   ├── historias/
-│   ├── arquitectura/            ← ADRs
-│   └── pruebas/
-├── ms-cliente-gestion/             ← backend, README propio
-└── ms-cliente-presentacion/            ← frontend, README propio
+│   ├── requerimientos/               requisitos de la prueba y matriz de trazabilidad
+│   ├── historias/                    historias de usuario por épica
+│   ├── arquitectura/                 visión general, excepciones y ADRs (adr/)
+│   └── pruebas/                      estrategia y resultados
+├── infra/
+│   ├── mongo/                        imagen de MongoDB con el usuario de la aplicación
+│   └── localstack/                   aprovisionamiento del AWS simulado
+├── scripts/                          init-env.sh, smoke-test.sh, aws-local-deploy-frontend.sh
+├── ms-cliente-gestion/               backend (Spring Boot WebFlux), README propio
+└── ms-cliente-presentacion/          frontend (Vue 3 + Nginx), README propio
 ```
 
 ---
@@ -890,12 +907,12 @@ Ambos son microservicios del dominio `cliente`; el subdominio indica qué hace c
 
 `main` es la rama estable: no se trabaja directo en ella. Cada entrega nace en una rama con prefijo, se prueba y se fusiona con `--no-ff` para que el historial muestre de dónde salió cada cambio.
 
-| Prefijo | Uso | Ejemplos |
+| Prefijo | Uso | Ramas |
 |---|---|---|
-| `feature/` | Funcionalidad nueva | `feature/hexagonal-dominio`, `feature/persistencia-postgres`, `feature/seguridad-jwt`, `feature/frontend-vue-crud-login` |
-| `fix/` | Corrección de errores | `fix/frontend-telefono-accesibilidad` |
-| `refactor/` | Cambio interno sin alterar comportamiento | `refactor/lombok-infraestructura` |
-| `docs/` | Documentación | `docs/readme-microservicios` |
+| `feature/` | Funcionalidad nueva | `fundacion-monorepo`, `docker-compose-nginx`, `frontend-vue-crud-login`, `hexagonal-dominio`, `hexagonal-servicios`, `persistencia-postgres`, `api-rest-clientes`, `auditoria-mongodb`, `seguridad-jwt`, `endurecimiento-infra`, `aws-localstack`, `backend-correcciones-fase4`, `credenciales-demo-y-manual`, `lombok-y-logs`, `openapi-contract-first` |
+| `fix/` | Corrección de errores | `frontend-telefono-accesibilidad`, `docker-multiplataforma`, `precision-fecha-creacion` |
+| `refactor/` | Cambio interno sin alterar comportamiento | `lombok-infraestructura`, `renombrar-microservicios`, `organizacion-paquetes-web`, `puertos-solo-interfaces` |
+| `docs/` | Documentación | `readme-microservicios`, `estado-final-readme`, `estrategia-de-ramas`, `documentacion-del-proyecto` |
 
 - **Flujo:** rama → commits → *push* de la rama → `merge --no-ff` a `main` (`Merge <rama> into main: <descripción>`). Las ramas se conservan para poder ver cada entrega.
 - **Commits:** [Conventional Commits](https://www.conventionalcommits.org/) en español, uno por funcionalidad terminada y con sus pruebas incluidas (`feat(dominio)`, `feat(servicio)`, `feat(persistencia)`, `feat(web)`, `fix(frontend)`...).
@@ -941,7 +958,7 @@ cd ms-cliente-presentacion && npm ci && npm test  # Vitest
 | 007 | JWT con usuario único por entorno | Seguridad básica sin gestión de usuarios | Tabla de usuarios y roles: fuera de alcance |
 | 008 | MongoDB en Docker solo para auditoría | Único caso donde un documento aporta valor real; demuestra un segundo adaptador de salida | Usarlo para clientes: sin justificación |
 | 009 | Documentación y dominio en español; infraestructura en inglés | El contrato define los campos en español | — |
-| 010 | `reactor-core` (solo `reactor.core..`) permitido únicamente en `application`; el dominio queda sin librerías externas | Los puertos reactivos devuelven `Mono`/`Flux`; el kit no contempla Reactor y se declara aquí como excepción | Puertos síncronos con adaptadores que convierten: pierde el flujo reactivo |
+| 010 | `reactor-core` (`reactor.core`, `reactor.util.function/context/retry`) permitido únicamente en `application`; el dominio queda sin librerías externas | Los puertos reactivos devuelven `Mono`/`Flux`, así que la capa `application` necesita Reactor; se declara como excepción explícita (EXC-1) | Puertos síncronos con adaptadores que convierten: pierde el flujo reactivo |
 | 011 | Auditoría de mejor esfuerzo | Un fallo de Mongo no debe impedir operar clientes | Auditoría transaccional entre Postgres y Mongo: complejidad excesiva |
 | 014 | LocalStack fijado en 4.4.0 (sin token) para simular AWS | Cualquiera puede clonar y ejecutar sin cuenta; `latest` exige token desde marzo 2026 | `latest` con token: obliga a cada evaluador a registrarse |
 | 015 | Servicios AWS acotados a Secrets Manager, SQS y S3 | Tienen uso real en la app y están disponibles sin licencia; RDS/ECS no | Emular RDS/ECS: requiere plan de pago |
