@@ -699,7 +699,7 @@ Solo Nginx publica un puerto al host. Backend y bases de datos son accesibles ú
 | `postgres` | `postgres:16.15-alpine` | Volumen persistente, `healthcheck` con `pg_isready` |
 | `ms-cliente-gestion` | Build propio (multi-stage) | Usuario no root, `depends_on: postgres (service_healthy)`, `healthcheck` en actuator |
 | `ms-cliente-presentacion` | Build propio (Node → Nginx) | Sirve la SPA y hace reverse proxy `/api` → `ms-cliente-gestion` |
-| `mongo` | `mongo:7` | Volumen persistente, `healthcheck`; el backend lo usa para auditoría (Épica 3) |
+| `mongo` | Build propio sobre `mongo:7.0.43` (`infra/mongo/Dockerfile`) | Volumen persistente, `healthcheck`; el backend lo usa para auditoría (Épica 3) |
 
 ### 10.3 Variables de entorno (`.env.example`)
 

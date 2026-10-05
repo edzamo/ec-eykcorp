@@ -22,7 +22,9 @@ services:
     restart: unless-stopped
 
   mongo:
-    image: mongo:7.0.43
+    build:
+      context: ./infra/mongo
+    image: eykcorp/mongo-auditoria:7.0.43
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:?defina MONGO_USER en .env}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?defina MONGO_PASSWORD en .env}
@@ -30,7 +32,6 @@ services:
       MONGO_APP_PASSWORD: ${MONGO_APP_PASSWORD:?defina MONGO_APP_PASSWORD en .env}
     volumes:
       - mongodata:/data/db
-      - ./infra/mongo/init-auditoria.js:/docker-entrypoint-initdb.d/init-auditoria.js:ro
     networks:
       - eyk-net
     healthcheck:
