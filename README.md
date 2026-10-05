@@ -872,6 +872,9 @@ ec-eykcorp/
 ├── .github/
 │   ├── workflows/ci.yml              CI: backend, frontend e imágenes Docker
 │   └── dependabot.yml
+├── docs/
+│   ├── requerimientos/               requisitos de la prueba y trazabilidad
+│   └── arquitectura/                 arquitectura final y decisiones
 ├── infra/
 │   ├── mongo/                        imagen de MongoDB con el usuario de la aplicación
 │   └── localstack/                   aprovisionamiento del AWS simulado
