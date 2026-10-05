@@ -48,5 +48,19 @@ jobs:
           cache-dependency-path: ms-cliente-presentacion/package-lock.json
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
-      - run: npm test
+      - run: npm run lint
+      - run: npm run format:check
+      - run: npm run test:coverage
       - run: npm run build
+
+  imagenes-docker:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - name: Construir las imágenes de los dos microservicios
+        run: |
+          printf 'POSTGRES_DB=ci\nPOSTGRES_USER=ci\nPOSTGRES_PASSWORD=ci\nMONGO_USER=ci\nMONGO_PASSWORD=ci\nMONGO_APP_USER=ci\nMONGO_APP_PASSWORD=ci\nJWT_SECRET=ci-secret-ci-secret-ci-secret-ci-secret\nADMIN_USER=ci\nADMIN_PASSWORD_HASH=ci\n' > .env
+          docker compose build
