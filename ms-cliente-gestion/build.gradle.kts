@@ -35,7 +35,7 @@ dependencies {
     implementation("org.postgresql:r2dbc-postgresql")
     implementation("org.springframework.boot:spring-boot-starter-data-mongodb-reactive")
     // Swagger UI sirviendo el contrato YAML (contract-first): la generación desde el código está desactivada
-    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.17")
+    implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.1.1")
     implementation("org.flywaydb:flyway-core")
     implementation("org.flywaydb:flyway-database-postgresql")
     // Flyway migra por JDBC solo al arrancar; el acceso a datos en runtime es R2DBC
