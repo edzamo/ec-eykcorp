@@ -54,7 +54,7 @@ dependencies {
     testImplementation("com.tngtech.archunit:archunit-junit5:1.4.1")
     // Pruebas de conformidad del contrato OpenAPI
     testImplementation("io.swagger.parser.v3:swagger-parser:2.1.48")
-    testImplementation("com.atlassian.oai:swagger-request-validator-core:2.46.1")
+    testImplementation("com.atlassian.oai:swagger-request-validator-core:3.0.0")
     testImplementation("org.springframework.boot:spring-boot-testcontainers")
     testImplementation("org.testcontainers:postgresql")
     testImplementation("org.testcontainers:mongodb")
